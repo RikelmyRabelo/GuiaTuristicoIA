@@ -57,8 +57,8 @@ def conversar_com_valdir(pergunta: str, system_prompt: str):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": pergunta}
         ],
-        "temperature": 0.7,
-        "max_tokens": 500
+        "temperature": 0.3,
+        "max_tokens": 300
     }
 
     try:
@@ -80,7 +80,7 @@ def main():
     """Função principal que executa o loop do chat."""
     
     if not OPENROUTER_API_KEY:
-        print("🚨 [Erro Crítico] 🚨")
+        print("Erro Crítico ")
         print("A variável OPENROUTER_API_KEY não foi encontrada.")
         print("Por favor, crie um arquivo .env e adicione sua chave nele.")
         print("Exemplo: OPENROUTER_API_KEY='sua-chave-aqui'")
