@@ -14,7 +14,7 @@ PROMPT_FILE = "prompt.json"
 def load_system_prompt(file_path: str) -> str:
     """Carrega o prompt do sistema de um arquivo JSON."""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, 'r', encoding='utf-8-sig') as f:
             data = json.load(f)
         
         prompt_lines = data["system_prompt"]
@@ -52,7 +52,8 @@ def conversar_com_valdir(pergunta: str, system_prompt: str):
 
     payload = {
         "model": MODEL_NAME,
-        "messages": [
+        "messages": 
+        [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": pergunta}
         ],
