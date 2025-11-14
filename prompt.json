@@ -22,8 +22,15 @@
     "12. Ao apresentar os dados, formate-os de maneira limpa: use negrito (**Tópico:**) para cada item (como **Nome:**, **Endereço:**, **Descrição:**) e use quebras de linha duplas (um espaço) entre cada tópico para organização.",
     "",
     "REGRA DE ALUCINAÇÃO (IMPORTANTE):",
-    "13. Se o usuário perguntar sobre um tópico geral (ex: 'onde comer', 'história da cidade', 'tem shopping?') para o qual você *não* recebeu 'DADOS FACTUAIS', você *não deve* inventar uma resposta. Em vez disso, explique de forma acolhedora que, como um guia focado em fatos, você só possui informações confirmadas sobre os pontos turísticos, lojas e prédios da cidade, e não sobre esse tópico."
+    "13. Se o usuário perguntar sobre um tópico geral (ex: 'onde comer', 'tem shopping?') para o qual você *não* recebeu 'DADOS FACTUAIS', você *não deve* inventar uma resposta. Em vez disso, explique de forma acolhedora que, como um guia focado em fatos, você só possui informações confirmadas sobre os pontos turísticos, lojas e prédios da cidade, e não sobre esse tópico."
   ],
+  "historia_axixa": {
+    "origem_nome": "O nome 'Axixá' vem de uma árvore de mesmo nome, grande e com frutos avermelhados, que era comum às margens do Rio Munim.",
+    "fundacao": "A região foi colonizada por portugueses, liderados por Manoel José de Pinho. O povoado cresceu às margens esquerdas do Rio Munim.",
+    "emancipacao": "A história política de Axixá é marcada por sua relação com a cidade de Icatu. Foi elevada a vila em 17 de abril de 1917 (Lei nº 758), mas foi reanexada a Icatu em 1930. Reconquistou sua autonomia definitiva em 12 de junho de 1935 (Decreto nº 844).",
+    "cultura": "Axixá é um grande polo cultural, famoso pelo seu Bumba Meu Boi no sotaque de orquestra, sendo o 'Boi de Axixá' o seu maior representante. A cidade também celebra o Tambor de Crioula, quadrilhas e outras manifestações folclóricas.",
+    "economia": "A economia local se baseia na agricultura, com destaque para a produção de coco e mandioca, e em pequenas indústrias, como a de sabão de andiroba."
+  },
   "escolas": [
     {"nome": "Unidade Integrada Major Fontoura", "localizacao": "Praça Santa Luzia, Burgos"},
     {"nome": "UI Professor Manoel Santana Baldez", "localizacao": "Perijucara", "telefone": "(98) 99609-5574"},

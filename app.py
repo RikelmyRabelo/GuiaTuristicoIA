@@ -4,7 +4,7 @@ import json
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, render_template
 import urllib.parse
-import random
+import re
 
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -32,7 +32,7 @@ def conversar_com_valdir(pergunta: str, system_prompt: str, item_data_json: str 
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://seu-site-ou-projeto.com",
+        "HTTP-Referer": "https.seu-site-ou-projeto.com",
         "X-Title": "Guia Digital Valdir Moraes",
     }
     
@@ -72,13 +72,28 @@ def find_item_by_name(pergunta_lower: str, data: dict):
     if not data or not pergunta_lower:
         return None, None
 
-    pergunta_limpa = pergunta_lower.replace("?", "").replace(".", "").replace("!", "").replace(",", "")
+    pergunta_limpa = re.sub(r'[^\w\s]', '', pergunta_lower)
+    
+    stop_words = {
+        'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
+        'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
+        'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'qual', 'é',
+        'escola', 'igreja', 'loja', 'campo', 'ginásio', 'prefeitura',
+        'secretaria', 'prédio', 'tem'
+    }
+    
+    pergunta_keywords = {
+        word for word in pergunta_limpa.split() if word not in stop_words and len(word) > 2
+    }
+    
+    if not pergunta_keywords:
+        return None, None
 
     lists_to_search = ["pontos_turisticos", "igrejas", "lojas", "escolas", "predios_municipais", "campos_esportivos"]
     
     found_item = None
     found_key = None
-    best_match_len = 0
+    best_match_score = 0
 
     for key in lists_to_search:
         for item in data.get(key, []):
@@ -86,25 +101,26 @@ def find_item_by_name(pergunta_lower: str, data: dict):
             if not nome_completo:
                 continue
 
-            nome_simplificado = nome_completo.split('(')[0].strip().lower()
+            nome_limpo = re.sub(r'[^\w\s]', '', nome_completo)
             
-            names_to_check = [nome_completo]
-            if nome_simplificado and nome_simplificado != nome_completo:
-                names_to_check.append(nome_simplificado)
+            current_match_score = 0
+            for keyword in pergunta_keywords:
+                if keyword in nome_limpo:
+                    current_match_score += len(keyword)
             
-            for nome_check in names_to_check:
-                if nome_check and nome_check in pergunta_limpa:
-                    if len(nome_check) > best_match_len:
-                        best_match_len = len(nome_check)
-                        found_item = item
-                        found_key = key
+            if current_match_score > best_match_score:
+                best_match_score = current_match_score
+                found_item = item
+                found_key = key
                         
     return found_item, found_key
 
 def create_search_map_link(query: str) -> str:
     full_query = f"{query}, Axixá, Maranhão"
     encoded_query = urllib.parse.quote(full_query)
-    return f"https://www.google.com/maps/search/?api=1&query={encoded_query}"
+    
+    # CORREÇÃO DEFINITIVA: Usa o parâmetro de busca ?q= que é o padrão
+    return f"https://www.google.com/maps?q={encoded_query}"
 
 app = Flask(__name__)
 
@@ -122,18 +138,27 @@ def chat():
     if not pergunta:
         return jsonify({"erro": "Nenhuma pergunta fornecida."}), 400
 
-    item_encontrado, category_key = find_item_by_name(pergunta_lower, prompt_data)
-    
-    resposta_ia = None
+    item_encontrado = None
+    category_key = None
     mapa_link = None
     local_nome = None
     item_data_json = None
+    
+    is_historia = any(word in pergunta_lower for word in ["história", "historia", "fundação", "fundacao", "origem"])
+
+    if is_historia:
+        historia_data = prompt_data.get("historia_axixa")
+        if historia_data:
+            item_data_json = json.dumps(historia_data, ensure_ascii=False)
+    else:
+        item_encontrado, category_key = find_item_by_name(pergunta_lower, prompt_data)
 
     if item_encontrado:
         item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
         
         local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
-        endereco = item_encontrado.get("localizacao") or item_enconcontrado.get("endereco")
+        endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")
+        
         query_mapa = local_nome
         if endereco:
             query_mapa = f"{local_nome}, {endereco}"
