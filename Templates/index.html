@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia Digital Valdir Moraes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #chat-container {
+            width: 500px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            padding: 20px;
+            margin: 0;
+            border-bottom: 1px solid #eee;
+        }
+        #chat-box {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .message {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 75%;
+            line-height: 1.4;
+        }
+        .user {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .valdir {
+            background-color: #e9e9eb;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        #input-area {
+            display: flex;
+            padding: 20px;
+            border-top: 1px solid #eee;
+        }
+        #user-input {
+            flex-grow: 1;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 16px;
+        }
+        #send-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="chat-container">
+        <h1>🤖 Guia Digital Valdir Moraes</h1>
+        <div id="chat-box">
+            <div class="message valdir">
+                Olá, meu amigo! Sou o Valdir Moraes. O que você gostaria de saber sobre nossa querida Axixá do Maranhão?
+            </div>
+        </div>
+        <form id="input-area">
+            <input type="text" id="user-input" placeholder="Pergunte algo...">
+            <button type="submit" id="send-button">➤</button>
+        </form>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const inputArea = document.getElementById('input-area');
+        const userInput = document.getElementById('user-input');
+
+        inputArea.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const pergunta = userInput.value.trim();
+            if (pergunta === "") return;
+
+            addMessage(pergunta, 'user');
+            
+            userInput.value = '';
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ pergunta: pergunta })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao contatar o servidor.');
+                }
+
+                const data = await response.json();
+                
+                addMessage(data.resposta, 'valdir');
+
+            } catch (error) {
+                console.error("Erro:", error);
+                addMessage("Desculpe, estou com problemas de conexão no momento.", 'valdir');
+            }
+        });
+
+        function addMessage(text, sender) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', sender);
+            messageElement.textContent = text;
+            
+            chatBox.appendChild(messageElement);
+            
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
