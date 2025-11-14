@@ -29,7 +29,8 @@
     {"nome": "IEMA - Unidade Plena de Axixá", "localizacao": "Av. Magalhães de Almeida, Centro", "descricao": "Ensino Médio técnico/tempo integral"},
     {"nome": "Unidade Integrada Felipe Barbosa de Andrade", "localizacao": "Av. Ivar Saldanha, Centro-Grande", "telefone": "(98) 98811-4946"},
     {"nome": "Jardim de Infância Adelino Fontoura", "descricao": "Creche / educação infantil"},
-    {"nome": "Colégio Militar Tiradentes XV - Axixá", "localizacao": "R. Vinte e Três de Setembro"}
+    {"nome": "Colégio Militar Tiradentes XV - Axixá", "localizacao": "R. Vinte e Três de Setembro"},
+    {"nome": "UI Delarey Cardoso Nunes ", "localizacao": "Rua Delarey Cardoso Nunes, Santa Rosa", "descricao": "Ensino fundamental 1 e 2 (1° ao 5° ano pela manhã e 6° ao 9° ano à tarde)"}
   ],
   "lojas": [
     {"nome": "Eli Lojas", "descricao": "móveis e decoração", "localizacao": "Av. José Sarney, 42 - Centro"},
@@ -44,9 +45,9 @@
     {"nome": "Farmale (Farmácia do Trabalhador)", "descricao": "medicamentos e perfumaria"}
   ],
   "pontos_turisticos": [
-    {"nome": "Igreja da Luz (Belém)", "descricao": "patrimônio histórico, construída por volta de 1693", "localizacao": "Belém - zona rural", "acessibilidade": "acesso por estrada rural"},
+    {"nome": "Igreja da Luz", "descricao": "patrimônio histórico, construída por volta de 1693", "localizacao": "Belém - zona rural", "acessibilidade": "acesso por estrada rural"},
     {"nome": "Ilha de Perijuçara", "descricao": "pequenas praias com águas calmas, bom para banhos", "localizacao": "em frente ao povoado Perijuçara", "dica": "ideal em marés baixas"},
-    {"nome": "Praça e Igreja do Centro", "descricao": "Matriz - Nossa Senhora da Saúde / Santo Antônio", "localizacao": "Centro de Axixá"}
+    {"nome": "Praça e Igreja do Centro", "descricao": " Capela (a mais antiga Igreja da Região do Munim) construida no Século XVII (provavelmente no ano de 1693) por Jesuítas numa antiga Casa de Repouso. Foi erguida sobre pedras de paralelepípedo é cercada de lendas e mistérios (tesouros enterrados dentre outros) passa o Ano todo fechada abrindo apenas no período do Festejo de Nossa Senhora da Luz no Mês de Setembro.(30/08 a 08/09). O local possui uma bela visão do Rio Munim.", "localizacao": "Belém"}
   ],
   "predios_municipais": [
     {"orgao": "Prefeitura Municipal de Axixá", "endereco": "Rua Adelino Fontoura, 84 Centro", "telefone": "(98) 3453-1720"},
