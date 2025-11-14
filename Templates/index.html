@@ -29,6 +29,7 @@
             padding: 20px;
             margin: 0;
             border-bottom: 1px solid #eee;
+            font-size: 1.2em;
         }
         #chat-box {
             flex-grow: 1;
@@ -43,6 +44,7 @@
             border-radius: 18px;
             max-width: 75%;
             line-height: 1.4;
+            word-wrap: break-word;
         }
         .user {
             background-color: #007bff;
@@ -79,12 +81,34 @@
             cursor: pointer;
             font-size: 20px;
         }
+
+        /* Estilo para o link do mapa */
+        .map-link-container {
+            align-self: flex-start;
+            max-width: 75%;
+            margin-top: 5px;
+        }
+
+        .map-link {
+            display: block;
+            padding: 12px 15px;
+            background-color: #28a745;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .map-link:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
 
     <div id="chat-container">
-        <h1>🤖 Guia Digital Valdir Moraes</h1>
+        <h1>Guia Digital Valdir Moraes</h1>
         <div id="chat-box">
             <div class="message valdir">
                 Olá, meu amigo! Sou o Valdir Moraes. O que você gostaria de saber sobre nossa querida Axixá do Maranhão?
@@ -128,6 +152,10 @@
                 
                 addMessage(data.resposta, 'valdir');
 
+                if (data.mapa_link && data.local_nome) {
+                    addMapLink(data.mapa_link, data.local_nome);
+                }
+
             } catch (error) {
                 console.error("Erro:", error);
                 addMessage("Desculpe, estou com problemas de conexão no momento.", 'valdir');
@@ -140,6 +168,23 @@
             messageElement.textContent = text;
             
             chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function addMapLink(url, localNome) {
+            const linkContainer = document.createElement('div');
+            linkContainer.classList.add('map-link-container');
+            
+            const mapLink = document.createElement('a');
+            mapLink.classList.add('map-link');
+            mapLink.href = url;
+            mapLink.textContent = `Ver "${localNome}" no mapa`;
+            mapLink.target = '_blank';
+            mapLink.rel = 'noopener noreferrer';
+            
+            linkContainer.appendChild(mapLink);
+            
+            chatBox.appendChild(linkContainer);
             
             chatBox.scrollTop = chatBox.scrollHeight;
         }

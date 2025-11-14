@@ -3,42 +3,27 @@ import os
 import json
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, render_template
+import urllib.parse
 
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL_NAME = "deepseek/deepseek-chat"
-PROMPT_FILE = "prompt.json" #
+PROMPT_FILE = "prompt.json"
 
-
-def load_system_prompt(file_path: str) -> str:
-    """Carrega o prompt do sistema de um arquivo JSON.""" #
+def load_prompt_data(file_path: str) -> dict:
     try:
         with open(file_path, 'r', encoding='utf-8-sig') as f:
-            data = json.load(f) #
-        
-        prompt_lines = data["system_prompt"] #
-        
-        return "\n".join(prompt_lines)
-    
-    except FileNotFoundError:
-        print(f"[Erro] Arquivo de prompt não encontrado: {file_path}")
-        return None
-    except json.JSONDecodeError:
-        print(f"[Erro] O arquivo {file_path} não é um JSON válido.")
-        return None
-    except KeyError:
-        print(f"[Erro] Chave 'system_prompt' não encontrada no {file_path}.")
-        return None
-    except TypeError:
-        print(f"[Erro] O valor de 'system_prompt' no JSON não é uma lista de strings.")
-        return None
+            data = json.load(f)
+        return data
     except Exception as e:
-        print(f"[Erro] Ocorreu um erro ao ler o prompt: {e}")
+        print(f"[Erro] Ocorreu um erro ao ler o {file_path}: {e}")
         return None
 
+prompt_data = load_prompt_data(PROMPT_FILE)
+system_prompt = "\n".join(prompt_data.get("system_prompt", [])) if prompt_data else None
+
 def conversar_com_valdir(pergunta: str, system_prompt: str):
-    """Envia a pergunta para a API OpenRouter com o prompt de sistema.""" #
     
     if not system_prompt:
         return "[Erro crítico: O prompt do sistema não foi carregado.]"
@@ -76,38 +61,86 @@ def conversar_com_valdir(pergunta: str, system_prompt: str):
     except Exception as e:
         return f"[Erro inesperado: {e}]"
 
+def find_location_details(location_name: str, data: dict) -> str:
+    if not data:
+        return None
+    
+    list_keys = ["escolas", "lojas", "pontos_turisticos", "predios_municipais", "igrejas", "campos_esportivos"]
+    
+    for key in list_keys:
+        for item in data.get(key, []):
+            nome_local = item.get("nome", "").lower() or item.get("orgao", "").lower()
+            if location_name.lower() in nome_local:
+                if "localizacao" in item:
+                    return item["localizacao"]
+                if "endereco" in item:
+                    return item["endereco"]
+    return None
+
+def create_search_map_link(query: str) -> str:
+    full_query = f"{query}, Axixá, Maranhão"
+    encoded_query = urllib.parse.quote(full_query)
+    return f"https://www.google.com/maps/search/?api=1&query={encoded_query}"
 
 app = Flask(__name__)
 
-system_prompt = load_system_prompt(PROMPT_FILE)
-
 @app.route("/")
 def index():
-    """Serve a página principal do chat (index.html)."""
     return render_template("index.html")
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    """Recebe a pergunta do front-end e retorna a resposta da IA."""
     
     if not system_prompt:
         return jsonify({"erro": "Prompt do sistema não carregado no servidor."}), 500
 
     data = request.json
     pergunta = data.get("pergunta")
+    pergunta_lower = pergunta.lower() if pergunta else ""
 
     if not pergunta:
         return jsonify({"erro": "Nenhuma pergunta fornecida."}), 400
 
-    resposta = conversar_com_valdir(pergunta, system_prompt)
+    resposta_ia = conversar_com_valdir(pergunta, system_prompt)
     
-    return jsonify({"resposta": resposta})
+    mapa_link = None
+    local_nome = None
+    
+    triggers_mapa = ["onde fica", "como chegar", "mapa", "localização", "ir para", "endereço de"]
+    if any(trigger in pergunta_lower for trigger in triggers_mapa):
+        
+        location_name_found = None
+        if prompt_data:
+            all_items = []
+            list_keys = ["escolas", "lojas", "pontos_turisticos", "predios_municipais", "igrejas", "campos_esportivos"]
+            for key in list_keys:
+                all_items.extend(prompt_data.get(key, []))
+            
+            for item in all_items:
+                nome = item.get("nome") or item.get("orgao")
+                if nome:
+                    nome_simplificado = nome.split('(')[0].strip().lower()
+                    if nome_simplificado and nome_simplificado in pergunta_lower: 
+                        location_name_found = nome
+                        break 
+        
+        if location_name_found:
+            endereco = find_location_details(location_name_found, prompt_data)
+            local_nome = location_name_found 
+            
+            query_mapa = location_name_found
+            if endereco:
+                query_mapa = f"{location_name_found}, {endereco}"
+                
+            mapa_link = create_search_map_link(query_mapa)
+
+    return jsonify({"resposta": resposta_ia, "mapa_link": mapa_link, "local_nome": local_nome})
 
 if __name__ == "__main__":
     if not OPENROUTER_API_KEY:
         print("Erro Crítico ")
-        print("A variável OPENROUTER_API_KEY não foi encontrada.") #
-        print("Por favor, crie um arquivo .env e adicione sua chave nele.") #
+        print("A variável OPENROUTER_API_KEY não foi encontrada.")
+        print("Por favor, crie um arquivo .env e adicione sua chave nele.")
         print("Exemplo: OPENROUTER_API_KEY='sua-chave-aqui'")
     else:
         app.run(debug=True, port=5000)

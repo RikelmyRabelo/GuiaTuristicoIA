@@ -12,7 +12,6 @@ PROMPT_FILE = "prompt.json"
 
 
 def load_system_prompt(file_path: str) -> str:
-    """Carrega o prompt do sistema de um arquivo JSON."""
     try:
         with open(file_path, 'r', encoding='utf-8-sig') as f:
             data = json.load(f)
@@ -38,8 +37,6 @@ def load_system_prompt(file_path: str) -> str:
         return None
 
 def conversar_com_valdir(pergunta: str, system_prompt: str):
-    """Envia a pergunta para a API OpenRouter com o prompt de sistema."""
-    
     if not system_prompt:
         return "[Erro crítico: O prompt do sistema não foi carregado.]"
 
@@ -77,8 +74,6 @@ def conversar_com_valdir(pergunta: str, system_prompt: str):
         return f"[Erro inesperado: {e}]"
 
 def main():
-    """Função principal que executa o loop do chat."""
-    
     if not OPENROUTER_API_KEY:
         print("Erro Crítico ")
         print("A variável OPENROUTER_API_KEY não foi encontrada.")
@@ -90,7 +85,7 @@ def main():
     if not system_prompt:
         return
 
-    print("🤖 Guia Digital Valdir Moraes - Axixá do Maranhão 🌴\n")
+    print("Guia Digital Valdir Moraes - Axixá\n")
     print("Dica: digite 'sair' para encerrar.\n")
 
     while True:

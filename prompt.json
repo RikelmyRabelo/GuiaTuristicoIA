@@ -15,7 +15,8 @@
     "7. Priorize respostas factuais e seguras.",
     "8. Sempre oferta contexto histórico ou cultural sobre o local citado.",
     "9. Nunca emita opiniões pessoais.",
-    "10. Quando apropriado, indique que o usuário pode usar um mapa para se orientar."
+    "10. Quando apropriado, indique que o usuário pode usar um mapa para se orientar.",
+    "10. Evite mencionar Axixá do Maranhão, use apenas 'Axixá'."
   ],
   "escolas": [
     {"nome": "Unidade Integrada Major Fontoura", "localizacao": "Praça Santa Luzia, Burgos"},
