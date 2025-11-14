@@ -4,7 +4,7 @@ import json
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, render_template
 import urllib.parse
-import re
+import reapp = Flask(__name__)
 
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -119,10 +119,9 @@ def create_search_map_link(query: str) -> str:
     full_query = f"{query}, Axixá, Maranhão"
     encoded_query = urllib.parse.quote(full_query)
     
-    # CORREÇÃO DEFINITIVA: Usa o parâmetro de busca ?q= que é o padrão
     return f"https://www.google.com/maps?q={encoded_query}"
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='public')
 
 @app.route("/")
 def index():
@@ -170,12 +169,3 @@ def chat():
     resposta_ia = conversar_com_valdir(pergunta, system_prompt, item_data_json)
 
     return jsonify({"resposta": resposta_ia, "mapa_link": mapa_link, "local_nome": local_nome})
-
-if __name__ == "__main__":
-    if not OPENROUTER_API_KEY:
-        print("Erro Crítico ")
-        print("A variável OPENROUTER_API_KEY não foi encontrada.")
-        print("Por favor, crie um arquivo .env e adicione sua chave nele.")
-        print("Exemplo: OPENROUTER_API_KEY='sua-chave-aqui'")
-    else:
-        app.run(debug=True, port=5000)
