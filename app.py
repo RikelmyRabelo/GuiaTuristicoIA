@@ -14,6 +14,9 @@ OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL_NAME = "deepseek/deepseek-chat"
 PROMPT_FILE = "prompt.json"
 
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+PROMPT_FILE = os.path.join(APP_ROOT, "prompt.json")
+
 def load_prompt_data(file_path: str) -> dict:
     try:
         with open(file_path, 'r', encoding='utf-8-sig') as f:
