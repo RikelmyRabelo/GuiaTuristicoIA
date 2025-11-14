@@ -12,12 +12,10 @@ OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL_NAME = "deepseek/deepseek-chat"
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-
 PROMPT_FILE = os.path.join(APP_ROOT, "prompt.json")
 template_dir = os.path.join(APP_ROOT, 'public')
 
 app = Flask(__name__, template_folder=template_dir)
-
 
 def load_prompt_data(file_path: str) -> dict:
     try:
@@ -27,13 +25,13 @@ def load_prompt_data(file_path: str) -> dict:
     except Exception as e:
         print(f"[Erro] Ocorreu um erro ao ler o {file_path}: {e}")
         return None
-    
+
 prompt_data = load_prompt_data(PROMPT_FILE)
  
 if prompt_data:
     system_prompt = "\n".join(prompt_data.get("system_prompt", []))
 else:
-    system_prompt = None 
+    system_prompt = None
 
 def conversar_com_valdir(pergunta: str, system_prompt: str, item_data_json: str = None):
     
@@ -132,8 +130,6 @@ def create_search_map_link(query: str) -> str:
     
     return f"https://www.google.com/maps?q={encoded_query}"
 
-app = Flask(__name__, template_folder='public')
-
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -156,13 +152,14 @@ def chat():
     
     is_historia = any(word in pergunta_lower for word in ["história", "historia", "fundação", "fundacao", "origem"])
 
-    if is_historia:
-        historia_data = prompt_data.get("historia_axixa")
-        if historia_data:
-            item_data_json = json.dumps(historia_data, ensure_ascii=False)
-    else:
-        item_encontrado, category_key = find_item_by_name(pergunta_lower, prompt_data)
-
+    if prompt_data:
+        if is_historia:
+            historia_data = prompt_data.get("historia_axixa")
+            if historia_data:
+                item_data_json = json.dumps(historia_data, ensure_ascii=False)
+        else:
+            item_encontrado, category_key = find_item_by_name(pergunta_lower, prompt_data)
+    
     if item_encontrado:
         item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
         
