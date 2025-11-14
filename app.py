@@ -4,7 +4,9 @@ import json
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, render_template
 import urllib.parse
-import reapp = Flask(__name__)
+import re
+
+app = Flask(__name__)
 
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
