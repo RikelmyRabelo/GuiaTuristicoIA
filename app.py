@@ -6,8 +6,6 @@ from flask import Flask, request, jsonify, render_template
 import urllib.parse
 import re
 
-app = Flask(__name__)
-
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -15,7 +13,6 @@ MODEL_NAME = "deepseek/deepseek-chat"
 PROMPT_FILE = "prompt.json"
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-PROMPT_FILE = os.path.join(APP_ROOT, "prompt.json")
 
 def load_prompt_data(file_path: str) -> dict:
     try:
@@ -27,7 +24,11 @@ def load_prompt_data(file_path: str) -> dict:
         return None
 
 prompt_data = load_prompt_data(PROMPT_FILE)
-system_prompt = "\n".join(prompt_data.get("system_prompt", [])) if prompt_data else None
+ 
+if prompt_data:
+    system_prompt = "\n".join(prompt_data.get("system_prompt", []))
+else:
+    system_prompt = None
 
 def conversar_com_valdir(pergunta: str, system_prompt: str, item_data_json: str = None):
     
