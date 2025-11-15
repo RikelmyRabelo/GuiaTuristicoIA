@@ -13,7 +13,6 @@ MODEL_NAME = "deepseek/deepseek-chat"
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 PROMPT_FILE = os.path.join(APP_ROOT, "prompt.json")
-template_dir = os.path.join(APP_ROOT, 'public')
 
 app = Flask(__name__)
 
@@ -86,9 +85,8 @@ def find_item_by_name(pergunta_lower: str, data: dict):
     stop_words = {
         'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
         'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
-        'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'qual', 'é',
-        'escola', 'igreja', 'loja', 'campo', 'ginásio', 'prefeitura',
-        'secretaria', 'prédio', 'tem'
+        'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localização', 'qual', 'é',
+        'gostaria', 'queria', 'saber', 'informações', 'info'
     }
     
     pergunta_keywords = {
@@ -106,15 +104,18 @@ def find_item_by_name(pergunta_lower: str, data: dict):
 
     for key in lists_to_search:
         for item in data.get(key, []):
-            nome_completo = (item.get("nome", "") or item.get("orgao", "")).lower()
-            if not nome_completo:
+            nome = (item.get("nome", "") or item.get("orgao", "")).lower()
+            descricao = item.get("descricao", "").lower()
+            
+            search_text = nome + " " + descricao
+            if not search_text.strip():
                 continue
 
-            nome_limpo = re.sub(r'[^\w\s]', '', nome_completo)
+            search_text_limpo = re.sub(r'[^\w\s]', '', search_text)
             
             current_match_score = 0
             for keyword in pergunta_keywords:
-                if keyword in nome_limpo:
+                if keyword in search_text_limpo:
                     current_match_score += len(keyword)
             
             if current_match_score > best_match_score:
@@ -150,9 +151,9 @@ def chat():
     local_nome = None
     item_data_json = None
     
-    is_historia = any(word in pergunta_lower for word in ["história", "historia", "fundação", "fundacao", "origem"])
-
     if prompt_data:
+        is_historia = any(word in pergunta_lower for word in ["história", "historia", "fundação", "fundacao", "origem"])
+
         if is_historia:
             historia_data = prompt_data.get("historia_axixa")
             if historia_data:
@@ -167,9 +168,29 @@ def chat():
         endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")
         
         query_mapa = local_nome
-        if endereco:
+        if endereco and endereco.lower() not in ["centro", "zona rural", "belém - zona rural"]:
             query_mapa = f"{local_nome}, {endereco}"
         mapa_link = create_search_map_link(query_mapa)
+    
+    elif not item_data_json:
+        categoria_encontrada = None
+        if any(word in pergunta_lower for word in ["quadra", "quadras", "campo", "campos", "esporte", "esportivos", "ginásio"]):
+            categoria_encontrada = "campos_esportivos"
+        elif any(word in pergunta_lower for word in ["igreja", "igrejas", "paróquia", "religião", "religioso"]):
+            categoria_encontrada = "igrejas"
+        elif any(word in pergunta_lower for word in ["loja", "lojas", "comprar", "comércio", "mercado", "farmácia"]):
+            categoria_encontrada = "lojas"
+        elif any(word in pergunta_lower for word in ["escola", "escolas", "colégio", "estudar", "iema"]):
+            categoria_encontrada = "escolas"
+        elif any(word in pergunta_lower for word in ["prefeitura", "prédio municipal", "secretaria"]):
+            categoria_encontrada = "predios_municipais"
+        elif any(word in pergunta_lower for word in ["ponto turístico", "turismo", "passear", "visitar", "praça", "banho", "rio"]):
+            categoria_encontrada = "pontos_turisticos"
+        
+        if categoria_encontrada and prompt_data:
+            dados_categoria = prompt_data.get(categoria_encontrada)
+            if dados_categoria:
+                item_data_json = json.dumps(dados_categoria, ensure_ascii=False)
     
     if not system_prompt:
         return jsonify({"erro": "Prompt do sistema não carregado no servidor."}), 500
