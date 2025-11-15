@@ -96,7 +96,7 @@ def find_item_by_name(pergunta_lower: str, data: dict):
     if not pergunta_keywords:
         return None, None
 
-    lists_to_search = ["pontos_turisticos", "igrejas", "lojas", "escolas", "predios_municipais", "campos_esportivos"]
+    lists_to_search = ["pontos_turisticos", "igrejas", "lojas", "escolas", "predios_municipais", "campos_esportivos", "cemiterios"]
     
     found_item = None
     found_key = None
@@ -104,10 +104,9 @@ def find_item_by_name(pergunta_lower: str, data: dict):
 
     for key in lists_to_search:
         for item in data.get(key, []):
-            nome = (item.get("nome", "") or item.get("orgao", "")).lower()
-            descricao = item.get("descricao", "").lower()
+            nome = item.get("nome", "").lower()
             
-            search_text = nome + " " + descricao
+            search_text = nome
             if not search_text.strip():
                 continue
 
@@ -164,7 +163,7 @@ def chat():
     if item_encontrado: 
         item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
         
-        local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
+        local_nome = item_encontrado.get("nome")
         endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")
         
         query_mapa = local_nome
@@ -186,6 +185,8 @@ def chat():
             categoria_encontrada = "predios_municipais"
         elif any(word in pergunta_lower for word in ["ponto turístico", "turismo", "passear", "visitar", "praça", "banho", "rio"]):
             categoria_encontrada = "pontos_turisticos"
+        elif any(word in pergunta_lower for word in ["cemitério", "cemitérios"]):
+            categoria_encontrada = "cemiterios"
         
         if categoria_encontrada and prompt_data:
             dados_categoria = prompt_data.get(categoria_encontrada)

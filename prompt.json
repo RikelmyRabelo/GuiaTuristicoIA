@@ -42,7 +42,18 @@
     {"nome": "IEMA - Unidade Plena de Axixá", "localizacao": "BR 402 - Santa Rosa", "descricao": "Ensino Médio técnico/tempo integral"},
     {"nome": "Unidade Integrada Felipe Barbosa de Andrade", "localizacao": "Av. Ivar Saldanha, Centro-Grande", "telefone": "(98) 98811-4946"},
     {"nome": "Jardim de Infância Adelino Fontoura", "descricao": "Creche / educação infantil"},
-    {"nome": "Colégio Militar Tiradentes XV - Axixá", "localizacao": "R. Vinte e Três de Setembro", "descricao": "Escola municipal de ensino fundamental 1 e 2"}
+    {"nome": "Colégio Militar Tiradentes XV - Axixá", "localizacao": "R. Vinte e Três de Setembro", "descricao": "Escola municipal de ensino fundamental 1 e 2"},
+    {"nome": "Jardim de Infância Felipe Barbosa de Andrade", "descricao": "educação infantil", "localizacao": "CentroGrande"},
+    {"nome": "Jardim de Infância Lilian Cortes Maciel Vieira", "localizacao": "Santa Rosa"},
+    {"nome": "JI Professor Maximiano Santos Lima", "localizacao": "Ruy-Vaz"},
+    {"nome": "UE Dr. Saturnino Belo", "localizacao": "Monte Alegre"},
+    {"nome": "UE Dr. Genesio Rego", "localizacao": "Belém (Praça Santo Antônio)"},
+    {"nome": "UE Joaquim Silva", "localizacao": "Bomfim (Rua Principal)"},
+    {"nome": "UE Professor Vicente Pires", "localizacao": "Iguaperiba (Rua Principal, 35)"},
+    {"nome": "UI Senador Clodomir Cardoso", "localizacao": "MA-402, Riachão"},
+    {"nome": "Unidade Integrada João Clímaco de Almeida", "localizacao": "MA-402, Cedro"},
+    {"nome": "Unidade Mais Integrada Professora Maria Vitória Santos (ou Maria Vitória Santos Marques)"},
+    {"nome": "UE (ou U.M.) Maria Vitória Santos Marques", "localizacao": "Rua São Pedro, 29"}
   ],
   "lojas": [
     {"nome": "Eli Lojas", "descricao": "móveis e decoração", "localizacao": "Av. José Sarney, 42 - Centro"},
@@ -54,18 +65,35 @@
     {"nome": "Nova Flor", "descricao": "flores, cestas e presentes"},
     {"nome": "Pit Stop Conveniência", "descricao": "bebidas e lanches", "localizacao": "Estrada MA-110, Km 17", "telefone": "(98) 99992-2860"},
     {"nome": "Mayra Magazine", "descricao": "móveis e eletrodomésticos"},
-    {"nome": "Farmale (Farmácia do Trabalhador)", "descricao": "medicamentos e perfumaria"}
+    {"nome": "Farmale (Farmácia do Trabalhador)", "descricao": "medicamentos e perfumaria"},
+    {"nome": "Comercial Silva P. de Cássia", "descricao": "mercado e armarinho", "localizacao": "Av. Parque São João, 06 – Riachão"},
+    {"nome": "Lunna Eletromóveis", "descricao": "eletros e móveis"},
+    {"nome": "Comercial Ferreira", "descricao": "armarinho e produtos gerais"},
+    {"nome": "N.C. Distribuidora", "descricao": "atacado e distribuição"},
+    {"nome": "Comercial Martins", "descricao": "mercado e materiais básicos"},
+    {"nome": "Loja10", "descricao": "utilidades domésticas e armarinho"},
+    {"nome": "Dany Multimarcas", "descricao": "roupas e calçados"}
   ],
   "pontos_turisticos": [
     {"nome": "Igreja da Luz", "descricao": "patrimônio histórico, construída por volta de 1693", "localizacao": "Belém - zona rural", "acessibilidade": "acesso por estrada rural"},
     {"nome": "Ilha de Perijuçara", "descricao": "pequenas praias com águas calmas, bom para banhos", "localizacao": "em frente ao povoado Perijuçara", "dica": "ideal em marés baixas"},
-    {"nome": "Praça e Igreja do Centro", "descricao": "Matriz - Nossa Senhora da Saúde / Santo Antônio", "localizacao": "Centro de Axixá"}
+    {"nome": "Praça e Igreja do Centro", "descricao": "Matriz - Nossa Senhora da Saúde / Santo Antônio", "localizacao": "Centro de Axixá"},
+    {"nome": "Balneario Santa Vitória", "descricao": "Local para banho muito bem ambientado", "localizacao": "Vale Quem Tem"}
   ],
   "predios_municipais": [
     {"orgao": "Prefeitura Municipal de Axixá", "endereco": "Rua Adelino Fontoura, 84 Centro", "telefone": "(98) 3453-1720"},
     {"orgao": "Secretaria Municipal de Educação (SEMED)", "endereco": "Rua Adelino Fontoura, 84", "telefone": "(98) 99146-6511"},
     {"orgao": "Secretaria Municipal de Saúde (SEMUS)", "endereco": "Rua Adelino Fontoura, 84", "telefone": "(98) 98842-3729"},
-    {"orgao": "Secretaria Municipal de Assistência Social", "endereco": "Rua Dr. José Ribamar Melo de Almeida, 84"}
+    {"orgao": "Secretaria Municipal de Assistência Social", "endereco": "Rua Dr. José Ribamar Melo de Almeida, 84"},
+    {"orgao": "Câmara Municipal de Axixá", "endereco": "Praça da Saúde, Nº 06 – Centro"},
+    {"orgao": "Secretaria Municipal de Planejamento e Articulação Governamental", "endereco": "Rua Adelino Fontoura, N° 84 - Centro", "telefone": "(98)98842-3729"},
+    {"orgao": "Secretaria Municipal de Finanças", "endereco": "Rua Adelino Fontoura, N° 84 - Centro", "telefone": "(98)98842-3729"},
+    {"orgao": "Secretaria Municipal de Meio Ambiente", "endereco": "Rua Adelino Fontoura, N° 84 - Centro", "telefone": "(98)98842-3729"},
+    {"orgao": "Centro de Referencia de Assistência Social - CRAS", "endereco": "Localizado na prefeitura da cidade"},
+    {"orgao": "Secretaria Municipal de Finanças (SEMAF)", "endereco": "Localizado na prefeitura da cidade", "telefone": "(98) 99146-6511"},
+    {"orgao": "Secretaria Municipal de Agricultura e Abastecimento (SAP)", "endereco": "Localizado na prefeitura da cidade", "telefone": "(98) 98842-3729"},
+    {"orgao": "Secretaria Municipal de Infraestrutura (SINFRA)", "endereco": "Localizado na prefeitura da cidade", "telefone": "(98) 98842-3729"},
+    {"orgao": "Secretaria Municipal de Planejamento e Articulação Governamental de Axixá (SEMPAN)", "endereco": "Localizado na prefeitura da cidade", "telefone": "(98) 98842-3729"}
   ],
   "igrejas": [
     {"nome": "Paróquia Nossa Senhora da Saúde - Igreja Católica", "tipo": "Católica (matriz)", "endereco": "Praça da Saúde, Centro"},
@@ -78,6 +106,26 @@
     {"nome": "Ginásio Poliesportivo José Pedro Ferreira Reis", "localizacao": "Centro"},
     {"nome": "Ginásio Poliesportivo Santa Rosa", "localizacao": "Santa Rosa"},
     {"nome": "Campo do Riachão", "descricao": "campo comunitário", "localizacao": "Povoa do Riachão"},
-    {"nome": "Campo do Perijuçara", "descricao": "área de areia/grama junto à margem", "localizacao": "Perijuçara"}
+    {"nome": "Campo do Perijuçara", "descricao": "área de areia/grama junto à margem", "localizacao": "Perijuçara"},
+    {"nome": "Campo da Rua da Sapucaia", "descricao": "campo de futebol (várzea/gramado)", "localizacao": "Rua da Sapucaia, Centro / proximidades"},
+    {"nome": "Campo do Bomfim", "descricao": "campo de futebol do povoado Bomfim", "localizacao": "Povoado Bomfim"},
+    {"nome": "Campo do Vale Quem Tem", "descricao": "campo no povoado Vale Quem Tem", "localizacao": "Vale Quem Tem"},
+    {"nome": "Campo do Cedro / Santa Rosa", "descricao": "campo comunitário próximo ao povoado Cedro / Santa Rosa (região de IEMA)", "localizacao": "Cedro / Santa Rosa"},
+    {"nome": "Campo / Quadra do Ruy Vaz", "descricao": "campo comunitário no povoado Ruy Vaz", "localizacao": "Ruy Vaz"},
+    {"nome": "Campo/Quadra da Paróquia / Comunidade (Centro)", "descricao": "área usada por comunidades/igrejas para festas e peladas", "localizacao": "próximo à Matriz / centro histórico"},
+    {"nome": "Ginásio Poliesportivo - Burgos", "localizacao": "Burgos"},
+    {"nome": "Ginásio Poliesportivo - Veneza", "localizacao": "Veneza"}
+  ],
+  "cemiterios": [
+    {"nome": "Cemitério Municipal de Axixá", "descricao": "cemitério público principal do município"},
+    {"nome": "Cemitério do Riachão", "localizacao": "povoado Riachão"},
+    {"nome": "Cemitério do Perijuçara / ilhas", "descricao": "pequenas áreas de sepultamento rurais", "localizacao": "Perijuçara / ilhas"},
+    {"nome": "Cemitério do Bomfim", "localizacao": "povoado Bomfim"},
+    {"nome": "Cemitério do Munim Mirim", "localizacao": "povoado Munim Mirim"},
+    {"nome": "Cemitério do Belém", "descricao": "próximo à capela de Nossa Senhora da Luz", "localizacao": "povoado Belém"},
+    {"nome": "Cemitério do Monte Alegre", "localizacao": "povoado Monte Alegre"},
+    {"nome": "Cemitério do Vale Quem Tem", "localizacao": "povoado Vale Quem Tem"},
+    {"nome": "Cemitério do Iguaperiba", "localizacao": "povoado Iguaperiba"},
+    {"nome": "Cemitério do Cedro / Santa Rosa", "localizacao": "povoado Cedro / Santa Rosa"}
   ]
 }
