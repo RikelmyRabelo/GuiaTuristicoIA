@@ -15,7 +15,7 @@ APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 PROMPT_FILE = os.path.join(APP_ROOT, "prompt.json")
 template_dir = os.path.join(APP_ROOT, 'public')
 
-app = Flask(__name__, template_folder=template_dir)
+app = Flask(__name__)
 
 def load_prompt_data(file_path: str) -> dict:
     try:
@@ -160,7 +160,7 @@ def chat():
         else:
             item_encontrado, category_key = find_item_by_name(pergunta_lower, prompt_data)
     
-    if item_encontrado:
+    if item_encontrado: 
         item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
         
         local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
