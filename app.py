@@ -58,7 +58,7 @@ def conversar_com_valdir(pergunta: str, system_prompt: str, item_data_json: str 
         "model": MODEL_NAME,
         "messages": messages,
         "temperature": 0.3,
-        "max_tokens": 300
+        "max_tokens": 1024
     }
 
     try:
@@ -86,7 +86,7 @@ def find_item_by_name(pergunta_lower: str, data: dict):
         'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
         'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
         'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localização', 'qual', 'é',
-        'gostaria', 'queria', 'saber', 'informações', 'info'
+        'gostaria', 'queria', 'saber', 'informações', 'info', 'axixá'
     }
     
     pergunta_keywords = {
