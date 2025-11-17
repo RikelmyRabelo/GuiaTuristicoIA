@@ -128,7 +128,7 @@ def create_search_map_link(query: str) -> str:
     full_query = f"{query}, Axixá, Maranhão"
     encoded_query = urllib.parse.quote(full_query)
     
-    return f"https://www.google.com/maps?q={encoded_query}"
+    return f"http://googleusercontent.com/maps/google.com/0{encoded_query}"
 
 @app.route("/")
 def index():
@@ -173,21 +173,21 @@ def chat():
     
     elif not item_data_json:
         categoria_encontrada = None
-        if any(word in pergunta_lower for word in ["quadra", "quadras", "campo", "campos", "esporte", "esportivos", "ginásio"]):
+        if any(word in pergunta_lower for word in ["quadra", "quadras", "campo", "campos", "esporte", "esportivos", "ginásio", "ginásios"]):
             categoria_encontrada = "campos_esportivos"
-        elif any(word in pergunta_lower for word in ["igreja", "igrejas", "paróquia", "religião", "religioso"]):
+        elif any(word in pergunta_lower for word in ["igreja", "igrejas", "paróquia", "paróquias", "religião", "religioso"]):
             categoria_encontrada = "igrejas"
         elif any(word in pergunta_lower for word in ["loja", "lojas", "comprar", "comércio", "mercado", "farmácia"]):
             categoria_encontrada = "lojas"
-        elif any(word in pergunta_lower for word in ["escola", "escolas", "colégio", "estudar", "iema"]):
+        elif any(word in pergunta_lower for word in ["escola", "escolas", "colégio", "colégios", "estudar", "iema"]):
             categoria_encontrada = "escolas"
-        elif any(word in pergunta_lower for word in ["prefeitura", "prédio municipal", "secretaria"]):
+        elif any(word in pergunta_lower for word in ["prefeitura", "prédio municipal", "prédios municipais", "secretaria", "secretarias"]):
             categoria_encontrada = "predios_municipais"
-        elif any(word in pergunta_lower for word in ["ponto turístico", "turismo", "passear", "visitar", "praça", "banho", "rio"]):
+        elif any(word in pergunta_lower for word in ["ponto turístico", "pontos turísticos", "turismo", "passear", "visitar", "praça", "praças", "banho", "rio"]):
             categoria_encontrada = "pontos_turisticos"
         elif any(word in pergunta_lower for word in ["cemitério", "cemitérios"]):
             categoria_encontrada = "cemiterios"
-        elif any(word in pergunta_lower for word in ["pousada", "pousadas", "dormir", "hotel", "hospedagem", "dormitório"]):
+        elif any(word in pergunta_lower for word in ["pousada", "pousadas", "dormir", "hotel", "hotéis", "hospedagem", "hospedagens", "dormitório", "dormitórios"]):
             categoria_encontrada = "pousadas_dormitorios"
         
         if categoria_encontrada and prompt_data:
