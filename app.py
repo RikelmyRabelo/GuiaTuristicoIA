@@ -98,7 +98,8 @@ def find_item_by_name(pergunta_lower: str, data: dict):
         'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
         'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
         'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localizacao', 'qual', 'e',
-        'gostaria', 'queria', 'saber', 'informacoes', 'info', 'axixa'
+        'gostaria', 'queria', 'saber', 'informacoes', 'info', 'axixa',
+        'loja', 'lojas'
     }
     
     pergunta_keywords = {
@@ -138,7 +139,7 @@ def create_search_map_link(query: str) -> str:
     full_query = f"{query}, Axixá, Maranhão"
     encoded_query = urllib.parse.quote(full_query)
     
-    return f"https://www.google.com/maps?q={encoded_query}"
+    return f"http://googleusercontent.com/maps/google.com/0{encoded_query}"
 
 @app.route("/")
 def index():
@@ -160,6 +161,13 @@ def chat():
     local_nome = None
     item_data_json = None
     
+    stop_words_list = {
+        'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
+        'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
+        'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localizacao', 'qual', 'e',
+        'gostaria', 'queria', 'saber', 'informacoes', 'info', 'axixa'
+    }
+
     if prompt_data:
         is_historia = any(word in pergunta_lower for word in ["história", "historia", "fundação", "fundacao", "origem"])
 
@@ -179,33 +187,56 @@ def chat():
         query_mapa = local_nome
         if endereco and endereco.lower() not in ["centro", "zona rural", "belém - zona rural"]:
             query_mapa = f"{local_nome}, {endereco}"
-        mapa_link = create_search_map_link(query_m)
+        mapa_link = create_search_map_link(query_mapa)
     
     elif not item_data_json:
         categoria_encontrada = None
         pergunta_normalizada = normalize_text(pergunta_lower)
+        pergunta_normalizada_set = set(pergunta_normalizada.split())
+        
+        categoria_keywords = {}
         
         if any(word in pergunta_normalizada for word in ["quadra", "quadras", "campo", "campos", "esporte", "esportivos", "ginasio", "ginasios"]):
             categoria_encontrada = "campos_esportivos"
+            categoria_keywords = {"quadra", "quadras", "campo", "campos", "esporte", "esportivos", "ginasio", "ginasios"}
         elif any(word in pergunta_normalizada for word in ["igreja", "igrejas", "paroquia", "paroquias", "religiao", "religioso"]):
             categoria_encontrada = "igrejas"
+            categoria_keywords = {"igreja", "igrejas", "paroquia", "paroquias", "religiao", "religioso"}
         elif any(word in pergunta_normalizada for word in ["loja", "lojas", "comprar", "comercio", "mercado", "farmacia"]):
             categoria_encontrada = "lojas"
+            categoria_keywords = {"loja", "lojas", "comprar", "comercio", "mercado", "farmacia"}
         elif any(word in pergunta_normalizada for word in ["escola", "escolas", "colegio", "colegios", "estudar", "iema"]):
             categoria_encontrada = "escolas"
+            categoria_keywords = {"escola", "escolas", "colegio", "colegios", "estudar", "iema"}
         elif any(word in pergunta_normalizada for word in ["prefeitura", "predio municipal", "predios municipais", "secretaria", "secretarias"]):
             categoria_encontrada = "predios_municipais"
+            categoria_keywords = {"prefeitura", "predio", "municipal", "predios", "municipais", "secretaria", "secretarias"}
         elif any(word in pergunta_normalizada for word in ["ponto turistico", "pontos turisticos", "turismo", "passear", "visitar", "praca", "pracas", "banho", "rio", "balneario", "balnearios", "historico", "historicos", "ruina", "ruinas"]):
             categoria_encontrada = "pontos_turisticos"
+            categoria_keywords = {"ponto", "pontos", "turistico", "turisticos", "turismo", "passear", "visitar", "praca", "pracas", "banho", "rio", "balneario", "balnearios", "historico", "historicos", "ruina", "ruinas"}
         elif any(word in pergunta_normalizada for word in ["cemiterio", "cemiterios"]):
             categoria_encontrada = "cemiterios"
+            categoria_keywords = {"cemiterio", "cemiterios"}
         elif any(word in pergunta_normalizada for word in ["pousada", "pousadas", "dormir", "hotel", "hoteis", "hospedagem", "hospedagens", "dormitorio", "dormitorios"]):
             categoria_encontrada = "pousadas_dormitorios"
+            categoria_keywords = {"pousada", "pousadas", "dormir", "hotel", "hoteis", "hospedagem", "hospedagens", "dormitorio", "dormitorios"}
         
         if categoria_encontrada and prompt_data:
             dados_categoria = prompt_data.get(categoria_encontrada)
-            if dados_categoria:
+            
+            sub_keywords = pergunta_normalizada_set - categoria_keywords - stop_words_list
+            
+            if sub_keywords and dados_categoria:
+                filtered_data = []
+                for item in dados_categoria:
+                    search_text = normalize_text(item.get("descricao", "") + " " + (item.get("nome", "") or item.get("orgao", "")))
+                    if all(kw in search_text for kw in sub_keywords):
+                        filtered_data.append(item)
                 
+                if filtered_data:
+                    dados_categoria = filtered_data
+            
+            if dados_categoria:
                 if len(dados_categoria) == 1:
                     item_encontrado = dados_categoria[0]
                     item_data_json = json.dumps(item_encontrado, ensure_ascii=False)

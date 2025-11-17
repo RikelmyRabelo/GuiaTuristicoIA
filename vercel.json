@@ -6,7 +6,7 @@
       "config": {
         "includeFiles": [
           "prompt.json",
-          "public/index.html"
+          "templates/index.html"
         ]
       }
     }
