@@ -77,7 +77,9 @@
     {"nome": "Igreja da Luz", "descricao": "patrimônio histórico, construída por volta de 1693", "localizacao": "Belém - zona rural", "acessibilidade": "acesso por estrada rural"},
     {"nome": "Ilha de Perijuçara", "descricao": "pequenas praias com águas calmas, bom para banhos", "localizacao": "em frente ao povoado Perijuçara", "dica": "ideal em marés baixas"},
     {"nome": "Praça e Igreja do Centro", "descricao": "Matriz - Nossa Senhora da Saúde / Santo Antônio", "localizacao": "Centro de Axixá"},
-    {"nome": "Balneario Santa Vitória", "descricao": "Local para banho muito bem ambientado", "localizacao": "Vale Quem Tem"}
+    {"nome": "Balneario Santa Vitória", "descricao": "Local para banho muito bem ambientado", "localizacao": "Vale Quem Tem"},
+    {"nome": "Ruinas do Quilombo de Munims Mirim", "descricao": "Restos de contruções onde se mantinha os escravizados no passado, patrimonio historico da cidade", "localizacao": "Munim Mirim"}
+
   ],
   "predios_municipais": [
     {"orgao": "Prefeitura Municipal de Axixá", "endereco": "Rua Adelino Fontoura, 84 Centro", "telefone": "(98) 3453-1720"},

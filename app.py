@@ -179,7 +179,7 @@ def chat():
         query_mapa = local_nome
         if endereco and endereco.lower() not in ["centro", "zona rural", "belém - zona rural"]:
             query_mapa = f"{local_nome}, {endereco}"
-        mapa_link = create_search_map_link(query_mapa)
+        mapa_link = create_search_map_link(query_m)
     
     elif not item_data_json:
         categoria_encontrada = None
@@ -195,7 +195,7 @@ def chat():
             categoria_encontrada = "escolas"
         elif any(word in pergunta_normalizada for word in ["prefeitura", "predio municipal", "predios municipais", "secretaria", "secretarias"]):
             categoria_encontrada = "predios_municipais"
-        elif any(word in pergunta_normalizada for word in ["ponto turistico", "pontos turisticos", "turismo", "passear", "visitar", "praca", "pracas", "banho", "rio", "balneario", "balnearios"]):
+        elif any(word in pergunta_normalizada for word in ["ponto turistico", "pontos turisticos", "turismo", "passear", "visitar", "praca", "pracas", "banho", "rio", "balneario", "balnearios", "historico", "historicos", "ruina", "ruinas"]):
             categoria_encontrada = "pontos_turisticos"
         elif any(word in pergunta_normalizada for word in ["cemiterio", "cemiterios"]):
             categoria_encontrada = "cemiterios"
