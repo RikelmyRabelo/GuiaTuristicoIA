@@ -96,7 +96,7 @@ def find_item_by_name(pergunta_lower: str, data: dict):
     if not pergunta_keywords:
         return None, None
 
-    lists_to_search = ["pontos_turisticos", "igrejas", "lojas", "escolas", "predios_municipais", "campos_esportivos", "cemiterios"]
+    lists_to_search = ["pontos_turisticos", "igrejas", "lojas", "escolas", "predios_municipais", "campos_esportivos", "cemiterios", "pousadas_dormitorios"]
     
     found_item = None
     found_key = None
@@ -104,7 +104,7 @@ def find_item_by_name(pergunta_lower: str, data: dict):
 
     for key in lists_to_search:
         for item in data.get(key, []):
-            nome = item.get("nome", "").lower()
+            nome = (item.get("nome", "") or item.get("orgao", "")).lower()
             
             search_text = nome
             if not search_text.strip():
@@ -163,7 +163,7 @@ def chat():
     if item_encontrado: 
         item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
         
-        local_nome = item_encontrado.get("nome")
+        local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
         endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")
         
         query_mapa = local_nome
@@ -187,11 +187,26 @@ def chat():
             categoria_encontrada = "pontos_turisticos"
         elif any(word in pergunta_lower for word in ["cemitério", "cemitérios"]):
             categoria_encontrada = "cemiterios"
+        elif any(word in pergunta_lower for word in ["pousada", "pousadas", "dormir", "hotel", "hospedagem", "dormitório"]):
+            categoria_encontrada = "pousadas_dormitorios"
         
         if categoria_encontrada and prompt_data:
             dados_categoria = prompt_data.get(categoria_encontrada)
             if dados_categoria:
-                item_data_json = json.dumps(dados_categoria, ensure_ascii=False)
+                
+                if len(dados_categoria) == 1:
+                    item_encontrado = dados_categoria[0]
+                    item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
+                    
+                    local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
+                    endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")
+                    
+                    query_mapa = local_nome
+                    if endereco and endereco.lower() not in ["centro", "zona rural", "belém - zona rural"]:
+                        query_mapa = f"{local_nome}, {endereco}"
+                    mapa_link = create_search_map_link(query_mapa)
+                else:
+                    item_data_json = json.dumps(dados_categoria, ensure_ascii=False)
     
     if not system_prompt:
         return jsonify({"erro": "Prompt do sistema não carregado no servidor."}), 500

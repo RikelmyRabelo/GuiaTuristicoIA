@@ -126,5 +126,8 @@
     {"nome": "Cemitério do Vale Quem Tem", "localizacao": "povoado Vale Quem Tem"},
     {"nome": "Cemitério do Iguaperiba", "localizacao": "povoado Iguaperiba"},
     {"nome": "Cemitério do Cedro / Santa Rosa", "localizacao": "povoado Cedro / Santa Rosa"}
+  ],
+  "pousadas_dormitorios": [
+    {"nome": "Recanto Azeite Doce", "descrição": "ambiente perfeito para se renovar as enegias, dormindo e se alimentando bem", "telefone": "(98) 98169-3074", "localizacao": "Centro Grande"}
   ]
 }
