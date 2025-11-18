@@ -36,7 +36,7 @@ def load_system_prompt(file_path: str) -> str:
         print(f"[Erro] Ocorreu um erro ao ler o prompt: {e}")
         return None
 
-def conversar_com_valdir(pergunta: str, system_prompt: str):
+def conversar_com_chat(pergunta: str, system_prompt: str):
     if not system_prompt:
         return "[Erro crítico: O prompt do sistema não foi carregado.]"
 
@@ -44,7 +44,7 @@ def conversar_com_valdir(pergunta: str, system_prompt: str):
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
         "HTTP-Referer": "https://seu-site-ou-projeto.com",
-        "X-Title": "Guia Digital Valdir Moraes",
+        "X-Title": "Guia Digital - LocalizAxixá",
     }
 
     payload = {
@@ -85,17 +85,17 @@ def main():
     if not system_prompt:
         return
 
-    print("Guia Digital Valdir Moraes - Axixá\n")
+    print("Guia Digital LocalizaAxixá\n")
     print("Dica: digite 'sair' para encerrar.\n")
 
     while True:
         pergunta = input("Você: ")
         if pergunta.lower() in ["sair", "exit", "tchau", "quit"]:
-            print("Valdir: Até logo, meu amigo! Que Axixá o receba sempre bem. 👋")
+            print("LocalizAxixá: Até logo, meu amigo! Que Axixá o receba sempre bem. 👋")
             break
         
-        resposta = conversar_com_valdir(pergunta, system_prompt)
-        print("Valdir:", resposta)
+        resposta = conversar_com_chat(pergunta, system_prompt)
+        print("LocalizaAxixá:", resposta)
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/static/favicon.webp" type="image/x-icon">
-    <title>Guia Digital Valdir Moraes</title>
+    <title>Guia Digital - LocalizAxixá</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
@@ -17,7 +17,7 @@
     <div id="chat-container">
         <h1>
             <span>
-                <i class="fas fa-map-marked-alt"></i> Guia Digital Valdir Moraes
+                <i class="fas fa-map-marked-alt"></i> Guia Digital - LocalizAxixá
             </span>
             <div class="theme-toggle" onclick="toggleTheme()">
                 <i id="theme-icon" class="fas fa-moon"></i>
@@ -25,8 +25,8 @@
         </h1>
 
         <div id="chat-box">
-            <div class="message valdir">
-                Olá, meu amigo! Sou o Valdir Moraes. O que você gostaria de saber sobre nossa querida Axixá?
+            <div class="message LocalizAxixá">
+                Olá, meu amigo! Sou o guia digital da cidade. O que você gostaria de saber sobre nossa querida Axixá?
             </div>
         </div>
 
@@ -57,7 +57,7 @@
 
         function showLoading() {
             loadingElement = document.createElement('div');
-            loadingElement.classList.add('message', 'valdir', 'loading-dots');
+            loadingElement.classList.add('message', 'guia', 'loading-dots');
             loadingElement.id = 'loading-dots';
 
             for (let i = 0; i < 3; i++) {
@@ -109,7 +109,7 @@
 
                 removeLoading();
 
-                addMessage(data.resposta, 'valdir');
+                addMessage(data.resposta, 'guia');
 
                 if (data.mapa_link && data.local_nome) {
                     addMapLink(data.mapa_link, data.local_nome);
@@ -118,7 +118,7 @@
             } catch (error) {
                 removeLoading();
                 console.error("Erro:", error);
-                addMessage("Desculpe, estou com problemas de conexão no momento.", 'valdir');
+                addMessage("Desculpe, estou com problemas de conexão no momento.", 'guia');
             } finally {
                 userInput.disabled = false;
                 userInput.focus();

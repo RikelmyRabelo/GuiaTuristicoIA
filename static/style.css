@@ -5,8 +5,8 @@
     --text-color: #343a40;
     --user-bg: #007bff;
     --user-text: white;
-    --valdir-bg: #e2e6ea;
-    --valdir-text: #343a40;
+    --guia-bg: #e2e6ea;
+    --guia-text: #343a40;
     --shadow-color: rgba(0, 0, 0, 0.1);
     --border-color: #dee2e6;
     --button-bg: #008000;
@@ -19,8 +19,8 @@
     --text-color: #e0e0e0;
     --user-bg: #4a77a9;
     --user-text: white;
-    --valdir-bg: #3c3c3c;
-    --valdir-text: #e0e0e0;
+    --guia-bg: #3c3c3c;
+    --guia-text: #e0e0e0;
     --shadow-color: rgba(0, 0, 0, 0.5);
     --border-color: #333;
     --button-bg: #00a000;
@@ -107,9 +107,9 @@ h1 i {
     border-bottom-right-radius: 4px;
 }
 
-.valdir {
-    background-color: var(--valdir-bg);
-    color: var(--valdir-text);
+.guia {
+    background-color: var(--guia-bg);
+    color: var(--guia-text);
     margin-right: auto;
     border-bottom-left-radius: 4px;
 }
@@ -177,7 +177,7 @@ h1 i {
 .dot {
     width: 8px;
     height: 8px;
-    background-color: var(--valdir-text);
+    background-color: var(--guia-text);
     border-radius: 50%;
     margin: 0 4px;
     animation: bounce 1.4s infinite ease-in-out;

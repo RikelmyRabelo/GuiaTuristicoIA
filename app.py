@@ -33,7 +33,7 @@ if prompt_data:
 else:
     system_prompt = None
 
-def conversar_com_valdir(pergunta: str, system_prompt: str, item_data_json: str = None):
+def conversar_com_guia(pergunta: str, system_prompt: str, item_data_json: str = None):
     
     if not system_prompt:
         return "[Erro crítico: O prompt do sistema não foi carregado.]"
@@ -42,7 +42,7 @@ def conversar_com_valdir(pergunta: str, system_prompt: str, item_data_json: str 
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
         "HTTP-Referer": "https.seu-site-ou-projeto.com",
-        "X-Title": "Guia Digital Valdir Moraes",
+        "X-Title": "Guia Digital - LocalizAxixá",
     }
     
     messages = [{"role": "system", "content": system_prompt}]
@@ -254,6 +254,6 @@ def chat():
     if not system_prompt:
         return jsonify({"erro": "Prompt do sistema não carregado no servidor."}), 500
     
-    resposta_ia = conversar_com_valdir(pergunta, system_prompt, item_data_json)
+    resposta_ia = conversar_com_guia(pergunta, system_prompt, item_data_json)
 
     return jsonify({"resposta": resposta_ia, "mapa_link": mapa_link, "local_nome": local_nome})
