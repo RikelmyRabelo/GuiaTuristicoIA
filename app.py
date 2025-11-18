@@ -139,7 +139,7 @@ def create_search_map_link(query: str) -> str:
     full_query = f"{query}, Axixá, Maranhão"
     encoded_query = urllib.parse.quote(full_query)
     
-    return f"http://googleusercontent.com/maps/google.com/0{encoded_query}"
+    return f"https://www.google.com/maps/search/{encoded_query}"
 
 @app.route("/")
 def index():

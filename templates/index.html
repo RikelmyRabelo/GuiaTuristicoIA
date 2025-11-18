@@ -1,137 +1,96 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/static/favicon.webp" type="image/x-icon">
     <title>Guia Digital Valdir Moraes</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        #chat-container {
-            width: 500px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            height: 80vh;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-            padding: 20px;
-            margin: 0;
-            border-bottom: 1px solid #eee;
-            font-size: 1.2em;
-        }
-        #chat-box {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .message {
-            padding: 10px 15px;
-            border-radius: 18px;
-            max-width: 75%;
-            line-height: 1.5;
-            word-wrap: break-word;
-        }
-        .user {
-            background-color: #007bff;
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-        .valdir {
-            background-color: #e9e9eb;
-            color: #333;
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-        }
-        #input-area {
-            display: flex;
-            padding: 20px;
-            border-top: 1px solid #eee;
-        }
-        #user-input {
-            flex-grow: 1;
-            border: 1px solid #ccc;
-            border-radius: 20px;
-            padding: 10px 15px;
-            font-size: 16px;
-        }
-        #send-button {
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            margin-left: 10px;
-            cursor: pointer;
-            font-size: 20px;
-        }
-        .map-link-container {
-            align-self: flex-start;
-            max-width: 75%;
-            margin-top: 5px;
-        }
-        .map-link {
-            display: block;
-            padding: 12px 15px;
-            background-color: #28a745;
-            color: white !important;
-            text-decoration: none;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: bold;
-            transition: background-color 0.2s;
-        }
-        .map-link:hover {
-            background-color: #218838;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
+
+<body class="light-mode">
 
     <div id="chat-container">
-        <h1>Guia Digital Valdir Moraes</h1>
+        <h1>
+            <span>
+                <i class="fas fa-map-marked-alt"></i> Guia Digital Valdir Moraes
+            </span>
+            <div class="theme-toggle" onclick="toggleTheme()">
+                <i id="theme-icon" class="fas fa-moon"></i>
+            </div>
+        </h1>
+
         <div id="chat-box">
             <div class="message valdir">
                 Olá, meu amigo! Sou o Valdir Moraes. O que você gostaria de saber sobre nossa querida Axixá?
             </div>
         </div>
+
         <form id="input-area">
-            <input type="text" id="user-input" placeholder="Pergunte algo...">
-            <button type="submit" id="send-button">➤</button>
+            <input type="text" id="user-input" placeholder="Pergunte algo..." autocomplete="off">
+            <button type="submit" id="send-button" disabled>➤</button>
         </form>
+
+        <div class="copyright">
+            © 2025 - Grupo de Análise e Desenvolvimento de Sistemas. Todos os direitos reservados.
+            <span>Guilherme Moreira Santos, José Ribamar Andrade Santos Júnior, Marina de Jesus Lima Muniz e Rikelmy Rabelo Freitas.</span>
+        </div>
     </div>
 
     <script>
         const chatBox = document.getElementById('chat-box');
         const inputArea = document.getElementById('input-area');
         const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
 
-        inputArea.addEventListener('submit', async function(event) {
+        // Habilita/Desabilita o botão baseado no input
+        userInput.addEventListener('input', () => {
+            sendButton.disabled = userInput.value.trim() === "";
+        });
+
+        // Funções de Carregamento
+        let loadingElement = null;
+
+        function showLoading() {
+            loadingElement = document.createElement('div');
+            loadingElement.classList.add('message', 'valdir', 'loading-dots');
+            loadingElement.id = 'loading-dots';
+
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                loadingElement.appendChild(dot);
+            }
+
+            chatBox.appendChild(loadingElement);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function removeLoading() {
+            if (loadingElement) {
+                loadingElement.remove();
+                loadingElement = null;
+            }
+        }
+
+        // Função principal de Chat
+        inputArea.addEventListener('submit', async function (event) {
             event.preventDefault();
-            
+
             const pergunta = userInput.value.trim();
             if (pergunta === "") return;
 
             addMessage(pergunta, 'user');
-            
+
             userInput.value = '';
+            sendButton.disabled = true;
+            userInput.disabled = true;
+
+            showLoading();
 
             try {
                 const response = await fetch('/chat', {
@@ -147,7 +106,9 @@
                 }
 
                 const data = await response.json();
-                
+
+                removeLoading();
+
                 addMessage(data.resposta, 'valdir');
 
                 if (data.mapa_link && data.local_nome) {
@@ -155,21 +116,26 @@
                 }
 
             } catch (error) {
+                removeLoading();
                 console.error("Erro:", error);
                 addMessage("Desculpe, estou com problemas de conexão no momento.", 'valdir');
+            } finally {
+                userInput.disabled = false;
+                userInput.focus();
+                sendButton.disabled = userInput.value.trim() === "";
             }
         });
 
         function addMessage(text, sender) {
             const messageElement = document.createElement('div');
             messageElement.classList.add('message', sender);
-            
-            let formattedText = text.replace(/</g, "<").replace(/>/g, ">");
+
+            let formattedText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
             formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
             formattedText = formattedText.replace(/\n/g, '<br>');
-            
+
             messageElement.innerHTML = formattedText;
-            
+
             chatBox.appendChild(messageElement);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -177,20 +143,46 @@
         function addMapLink(url, localNome) {
             const linkContainer = document.createElement('div');
             linkContainer.classList.add('map-link-container');
-            
+
             const mapLink = document.createElement('a');
             mapLink.classList.add('map-link');
             mapLink.href = url;
-            mapLink.textContent = `Ver "${localNome}" no mapa`;
+            mapLink.textContent = `🗺️ Ver "${localNome}" no mapa`;
             mapLink.target = '_blank';
             mapLink.rel = 'noopener noreferrer';
-            
+
             linkContainer.appendChild(mapLink);
-            
+
             chatBox.appendChild(linkContainer);
-            
             chatBox.scrollTop = chatBox.scrollHeight;
         }
+
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+
+            if (body.classList.contains('dark-mode')) {
+                body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+                icon.className = 'fas fa-moon';
+            } else {
+                body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+                icon.className = 'fas fa-sun';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('theme-icon').className = 'fas fa-sun';
+            } else {
+                document.getElementById('theme-icon').className = 'fas fa-moon';
+            }
+            userInput.focus();
+        });
     </script>
 </body>
+
 </html>
