@@ -80,7 +80,6 @@ def normalize_text(text: str) -> str:
     text = re.sub(r'[^\w\s]', '', text)
     return text
 
-# STOP WORDS (Lista limpa para evitar falso-negativo em 'material')
 STOP_WORDS = {
     'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
     'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
@@ -89,6 +88,13 @@ STOP_WORDS = {
     'tem', 'tinha', 'existe', 'ha', 'algum', 'alguma', 'uns', 'umas', 'um', 'uma',
     'banho', 'tomar', 'ir', 'chegar', 'encontrar', 'loja', 'lojas', 'municipal'
 }
+
+def safe_get(item, *keys):
+    for key in keys:
+        val = item.get(key) or item.get(key + " ")
+        if val:
+            return val
+    return ""
 
 def find_item_by_name(pergunta_lower: str, data: dict):
     if not data or not pergunta_lower:
@@ -111,9 +117,9 @@ def find_item_by_name(pergunta_lower: str, data: dict):
 
     for key in lists_to_search:
         for item in data.get(key, []):
-            texto_item = (item.get("nome", "") or item.get("orgao", "")) + " " + \
-                         (item.get("localizacao", "") or item.get("endereco", "")) + " " + \
-                         item.get("descricao", "")
+            texto_item = safe_get(item, "nome", "orgao") + " " + \
+                         safe_get(item, "localizacao", "endereco", "endereço") + " " + \
+                         safe_get(item, "descricao", "descrição")
             
             search_text_limpo = normalize_text(texto_item)
             
@@ -172,7 +178,7 @@ def chat():
             regras_categoria = {
                 "campos_esportivos": (["quadra", "campo", "ginasio", "estadio"], ["quadra", "campo", "ginasio", "estadio"]),
                 "igrejas": (["igreja", "paroquia", "religiao"], ["igreja", "paroquia"]),
-                "lojas": (["loja", "comprar", "mercado", "farmacia", "vende", "material", "materiais", "construcao"], ["loja", "comprar", "mercado"]),
+                "lojas": (["loja", "comprar", "mercado", "farmacia", "vende", "material", "materiais", "construcao", "moda", "calcados"], ["loja", "comprar", "mercado"]),
                 "escolas": (["escola", "colegio", "estudar", "iema", "creche", "infancia"], ["escola", "colegio", "estudar"]),
                 "predios_municipais": (["prefeitura", "secretaria", "cras", "camara", "vereador", "vereadores"], ["secretaria", "predio"]),
                 "pontos_turisticos": (["turismo", "passear", "banho", "rio", "balneario", "praca"], ["turismo", "passear", "banho", "rio", "balneario"]),
@@ -200,9 +206,9 @@ def chat():
                 if termos_busca:
                     for item in dados_raw:
                         texto_busca = normalize_text(
-                            (item.get("nome", "") or item.get("orgao", "")) + " " + 
-                            (item.get("localizacao", "") or item.get("endereco", "")) + " " +
-                            item.get("descricao", "")
+                            safe_get(item, "nome", "orgao") + " " + 
+                            safe_get(item, "localizacao", "endereco", "endereço") + " " +
+                            safe_get(item, "descricao", "descrição")
                         )
                         if any(t in texto_busca for t in termos_busca):
                             filtered_data.append(item)
@@ -210,19 +216,16 @@ def chat():
                 if len(filtered_data) > 1:
                     prioritarios = []
                     for item in filtered_data:
-                        nome_orgao = normalize_text(item.get("nome", "") or item.get("orgao", ""))
+                        nome_orgao = normalize_text(safe_get(item, "nome", "orgao"))
                         if any(t in nome_orgao for t in termos_busca):
                             prioritarios.append(item)
                     
-                    if len(prioritarios) == 1:
+                    if len(prioritarios) > 0:
                         filtered_data = prioritarios
 
                 if filtered_data:
-                    if len(filtered_data) == 1:
-                        item_encontrado = filtered_data[0]
-                        item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
-                    else:
-                        item_data_json = json.dumps(filtered_data, ensure_ascii=False)
+                    item_encontrado = filtered_data[0]
+                    item_data_json = json.dumps(filtered_data, ensure_ascii=False)
 
             if not item_data_json:
                 item_encontrado, _ = find_item_by_name(pergunta_lower, prompt_data)
@@ -230,8 +233,8 @@ def chat():
                     item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
 
     if item_encontrado: 
-        local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
-        endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")
+        local_nome = safe_get(item_encontrado, "nome", "orgao")
+        endereco = safe_get(item_encontrado, "localizacao", "endereco", "endereço")
         
         query_mapa = local_nome
         if endereco and endereco.lower() not in ["centro", "zona rural"]:
