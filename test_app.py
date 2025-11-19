@@ -7,20 +7,21 @@ client = app.test_client()
 def rodar_testes():
     cenarios = [
         ("Onde fica a escola IEMA?", "IEMA - Unidade Plena de Axixá"),
-        ("Quero saber sobre o colégio militar", "Colégio Militar Tiradentes XV - Axixá"),
-        
-        ("Onde compro roupas na Josy?", "Josy Boutique"),
-        ("Tem alguma loja de móveis?", "Eli Lojas"),
-        ("telefone do pit stop", "Pit Stop Conveniência"),
-
-        ("Quero tomar banho no balneário santa vitória", "Balneario Santa Vitória"),
-        ("Fale sobre a Igreja da Luz", "Igreja da Luz"),
-
-        ("Qual a história de fundação de Axixá?", "historia_axixa"),
-
-        ("Onde fica a prefeitura?", "Prefeitura Municipal de Axixá"),
-        
-        ("Onde tem um posto de gasolina?", None) 
+        ("Onde fica a Prefeitura?", "Prefeitura Municipal de Axixá"),
+        ("Onde posso comprar flores?", "Nova Flor"),
+        ("Quero comer galinha caipira", "Restaurante da Mocinha"),
+        ("Onde comprar móveis e decoração?", ["Eli Lojas", "Lunna Eletromóveis"]),
+        ("Tem alguma escola no povoado Burgos?", "Unidade Integrada Major Fontoura"),
+        ("Igreja no bairro São Benedito", "Igreja Batista de Jesus Cristo"),
+        ("Onde fica o ginásio de esportes?", "Ginásio Poliesportivo José Pedro Ferreira Reis"),
+        ("Onde é o cemitério municipal?", "Cemitério Municipal de Axixá"),
+        ("Quero dormir no recanto azeite doce", "Recanto Azeite Doce"),
+        ("onde fica a paroquia nossa senhora da saude", "Paróquia Nossa Senhora da Saúde - Igreja Católica"),
+        ("ruinas do quilombo", "Ruinas do Quilombo de Munim Mirim"),
+        ("Fale sobre o Bumba Meu Boi da cidade", "Dados de História"),
+        ("Quem fundou Axixá?", "Dados de História"),
+        ("Onde tem um cinema?", None),
+        ("Onde fica o aeroporto?", None)
     ]
 
     print(f"\n{'STATUS':<10} | {'ESPERADO':<35} | {'PERGUNTA'}")
@@ -36,14 +37,18 @@ def rodar_testes():
             response = client.post('/chat', json={'pergunta': pergunta})
             data = response.get_json()
 
-
             local_encontrado = data.get('local_nome')
 
-            if esperado == "historia_axixa":
+            if esperado == "Dados de História":
                 args, _ = mock_ia.call_args
-                dados_passados = args[2] if len(args) > 2 else ""
-                passou = "origem_nome" in str(dados_passados)
-                resultado_real = "Dados de História" if passou else "Nenhum dado"
+                dados_passados = args[2] if args and len(args) > 2 else ""
+                passou = "origem_nome" in str(dados_passados) or "cultura" in str(dados_passados)
+                resultado_real = "Dados de História encontrados" if passou else str(local_encontrado)
+            
+            elif isinstance(esperado, list):
+                passou = local_encontrado in esperado
+                resultado_real = local_encontrado
+            
             else:
                 passou = local_encontrado == esperado
                 resultado_real = local_encontrado

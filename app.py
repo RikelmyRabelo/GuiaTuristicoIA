@@ -23,7 +23,7 @@ def load_prompt_data(file_path: str) -> dict:
             data = json.load(f)
         return data
     except Exception as e:
-        print(f"[Erro] Ocorreu um erro ao ler o {file_path}: {e}")
+        print(f"[Erro] {e}")
         return None
 
 prompt_data = load_prompt_data(PROMPT_FILE)
@@ -34,13 +34,11 @@ else:
     system_prompt = None
 
 def conversar_com_guia(pergunta: str, system_prompt: str, item_data_json: str = None):
-    # MOCK PARA TESTES AUTOMATIZADOS
-    # Se a variável de ambiente MODO_TESTE estiver ativa, não gasta API
     if os.getenv("MODO_TESTE") == "True":
         return "Resposta simulada (Modo Teste)"
 
     if not system_prompt:
-        return "[Erro crítico: O prompt do sistema não foi carregado.]"
+        return "[Erro crítico]"
 
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
@@ -82,7 +80,6 @@ def normalize_text(text: str) -> str:
     text = re.sub(r'[^\w\s]', '', text)
     return text
 
-# Lista global de Stop Words (Palavras para ignorar na busca)
 STOP_WORDS = {
     'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
     'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
@@ -113,7 +110,6 @@ def find_item_by_name(pergunta_lower: str, data: dict):
 
     for key in lists_to_search:
         for item in data.get(key, []):
-            # Busca no nome, órgão, endereço e descrição
             texto_item = (item.get("nome", "") or item.get("orgao", "")) + " " + \
                          (item.get("localizacao", "") or item.get("endereco", "")) + " " + \
                          item.get("descricao", "")
@@ -123,9 +119,8 @@ def find_item_by_name(pergunta_lower: str, data: dict):
             current_match_score = 0
             for keyword in pergunta_keywords:
                 if keyword in search_text_limpo:
-                    current_match_score += 1 # Pontuação simples
+                    current_match_score += 1 
             
-            # Regra: Se o usuário digitou 2 palavras-chave válidas, pelo menos 1 deve estar presente
             if current_match_score > best_match_score:
                 best_match_score = current_match_score
                 found_item = item
@@ -157,24 +152,26 @@ def chat():
     item_data_json = None
     
     if prompt_data:
-        is_historia = any(word in pergunta_lower for word in ["história", "historia", "fundação", "fundacao", "origem"])
+        termos_historia = [
+            "história", "historia", "fundação", "fundacao", "origem", 
+            "fundou", "criou", "surgiu", "começou", 
+            "cultura", "folclore", "bumba", "boi", "festa"
+        ]
+        is_historia = any(word in pergunta_lower for word in termos_historia)
 
         if is_historia:
             historia_data = prompt_data.get("historia_axixa")
             if historia_data:
                 item_data_json = json.dumps(historia_data, ensure_ascii=False)
         else:
-            # Lógica de Categorias Melhorada
             pergunta_normalizada = normalize_text(pergunta_lower)
             
-            # Dicionário de gatilhos -> (chave_json, palavras_para_remover_da_busca)
-            # Note que para 'prefeitura' e 'iema', a lista de remoção é vazia ou reduzida
             regras_categoria = {
                 "campos_esportivos": (["quadra", "campo", "ginasio", "estadio"], ["quadra", "campo", "ginasio", "estadio"]),
                 "igrejas": (["igreja", "paroquia", "religiao"], ["igreja", "paroquia"]),
                 "lojas": (["loja", "comprar", "mercado", "farmacia", "vende"], ["loja", "comprar", "mercado"]),
-                "escolas": (["escola", "colegio", "estudar", "iema"], ["escola", "colegio", "estudar"]), # IEMA mantido na busca
-                "predios_municipais": (["prefeitura", "secretaria", "cras"], ["secretaria", "predio"]), # Prefeitura mantida na busca
+                "escolas": (["escola", "colegio", "estudar", "iema"], ["escola", "colegio", "estudar"]),
+                "predios_municipais": (["prefeitura", "secretaria", "cras"], ["secretaria", "predio"]),
                 "pontos_turisticos": (["turismo", "passear", "banho", "rio", "balneario", "praca"], ["turismo", "passear", "banho", "rio", "balneario"]),
                 "cemiterios": (["cemiterio"], ["cemiterio"]),
                 "pousadas_dormitorios": (["pousada", "hotel", "dormir"], ["pousada", "hotel"])
@@ -189,19 +186,13 @@ def chat():
                     keywords_to_remove = remover
                     break
             
-            # Se achou categoria, tenta filtrar dentro dela
-            busca_categoria_sucesso = False
             if categoria_selecionada:
                 dados_raw = prompt_data.get(categoria_selecionada, [])
-                
-                # Cria termos de busca removendo stop words e palavras da categoria (mas mantém nomes próprios)
                 termos_busca = set(pergunta_normalizada.split()) - set(keywords_to_remove) - STOP_WORDS
                 
                 filtered_data = []
-                
-                # Se não sobrou termo nenhum (ex: "onde fica a prefeitura?"), busca pela própria categoria triggering word
                 if not termos_busca and categoria_selecionada == "predios_municipais":
-                    termos_busca = {"prefeitura"} # Força busca por prefeitura
+                    termos_busca = {"prefeitura"}
 
                 if termos_busca:
                     for item in dados_raw:
@@ -209,26 +200,31 @@ def chat():
                             (item.get("nome", "") or item.get("orgao", "")) + " " + 
                             (item.get("localizacao", "") or item.get("endereco", ""))
                         )
-                        # Verifica se ALGUM termo relevante está no item (busca mais flexível)
                         if any(t in texto_busca for t in termos_busca):
                             filtered_data.append(item)
                 
+                if len(filtered_data) > 1:
+                    prioritarios = []
+                    for item in filtered_data:
+                        nome_orgao = normalize_text(item.get("nome", "") or item.get("orgao", ""))
+                        if any(t in nome_orgao for t in termos_busca):
+                            prioritarios.append(item)
+                    
+                    if len(prioritarios) == 1:
+                        filtered_data = prioritarios
+
                 if filtered_data:
-                    busca_categoria_sucesso = True
                     if len(filtered_data) == 1:
                         item_encontrado = filtered_data[0]
                         item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
                     else:
                         item_data_json = json.dumps(filtered_data, ensure_ascii=False)
 
-            # FALLBACK: Se a busca por categoria falhou (ou achou 0 itens), tenta busca global
-            # Isso resolve o caso "Igreja da Luz" (que é ponto turístico, mas usuário chamou de igreja)
             if not item_data_json:
                 item_encontrado, _ = find_item_by_name(pergunta_lower, prompt_data)
                 if item_encontrado:
                     item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
 
-    # Gera links e finaliza
     if item_encontrado: 
         local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
         endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")
