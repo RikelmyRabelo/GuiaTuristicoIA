@@ -29,7 +29,8 @@
     "fundacao": "A região foi colonizada por portugueses, liderados por Manoel José de Pinho. O povoado cresceu às margens esquerdas do Rio Munim.",
     "emancipacao": "A história política de Axixá é marcada por sua relação com a cidade de Icatu. Foi elevada a vila em 17 de abril de 1917 (Lei nº 758), mas foi reanexada a Icatu em 1930. Reconquistou sua autonomia definitiva em 12 de junho de 1935 (Decreto nº 844).",
     "cultura": "Axixá é um grande polo cultural, famoso pelo seu Bumba Meu Boi no sotaque de orquestra, sendo o 'Boi de Axixá' o seu maior representante. A cidade também celebra o Tambor de Crioula, quadrilhas e outras manifestações folclóricas.",
-    "economia": "A economia local se baseia na agricultura, com destaque para a produção de coco e mandioca, e em pequenas indústrias, como a de sabão de andiroba."
+    "economia": "A economia local se baseia na agricultura, com destaque para a produção de coco e mandioca, e em pequenas indústrias, como a de sabão de andiroba.",
+    "gastronomia": "A culinária de Axixá é rica em pratos típicos maranhenses, como o arroz de cuxá, peixe frito com farinha d'água e doces feitos com frutos locais."
   },
   "escolas": [
     {"nome": "Unidade Integrada Major Fontoura", "localizacao": "Praça Santa Luzia, Burgos"},
@@ -72,7 +73,11 @@
     {"nome": "N.C. Distribuidora", "descricao": "atacado e distribuição"},
     {"nome": "Comercial Martins", "descricao": "mercado e materiais básicos"},
     {"nome": "Loja10", "descricao": "utilidades domésticas e armarinho"},
-    {"nome": "Dany Multimarcas", "descricao": "roupas e calçados"}
+    {"nome": "Dany Multimarcas", "descricao": "roupas e calçados"},
+    {"nome": "Restaurante da Mocinha", "descricao": "restaurante que oferece pratos tipicos da cidade, como por exemplo, galinha caipira e churrasco", "localizacao": "Riachão"},
+    {"nome": "Juçara Açaí - Merão e Edite", "descricao": "restaurate de que oferece pratos tipicos da cidade, como por exemplo, a juçara com camarão", "localizacao": "Ruy Vaz"},
+    {"nome": "Mercadinho LN", "descricao": "mercearia e produtos básicos", "localizacao": "Riachão"}
+
   ],
   "pontos_turisticos": [
     {"nome": "Igreja da Luz", "descricao": "patrimônio histórico, construída por volta de 1693", "localizacao": "Belém - zona rural", "acessibilidade": "acesso por estrada rural"},

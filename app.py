@@ -208,6 +208,9 @@ def chat():
             elif any(word in pergunta_normalizada for word in ["pousada", "pousadas", "dormir", "hotel", "hoteis", "hospedagem", "hospedagens", "dormitorio", "dormitorios"]):
                 categoria_encontrada = "pousadas_dormitorios"
                 categoria_keywords = {"pousada", "pousadas", "dormir", "hotel", "hoteis", "hospedagem", "hospedagens", "dormitorio", "dormitorios"}
+            elif any(word in pergunta_normalizada for word in ["restaurante", "comida", "alimentacao", "alimentação", "comer", "prato", "pratos", "tipico", "tipicos"]):
+                categoria_encontrada = "lojas"
+                categoria_keywords = {"restaurante", "comida", "alimentacao", "alimentação", "comer", "prato", "pratos", "tipico", "tipicos"}
             
             if categoria_encontrada:
                 dados_categoria = prompt_data.get(categoria_encontrada)
