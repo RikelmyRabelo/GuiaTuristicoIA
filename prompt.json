@@ -117,9 +117,8 @@
     {"nome": "Campo da Rua da Sapucaia", "descricao": "campo de futebol (várzea/gramado)", "localizacao": "Rua da Sapucaia, Centro / proximidades"},
     {"nome": "Campo do Bomfim", "descricao": "campo de futebol do povoado Bomfim", "localizacao": "Povoado Bomfim"},
     {"nome": "Campo do Vale Quem Tem", "descricao": "campo no povoado Vale Quem Tem", "localizacao": "Vale Quem Tem"},
-    {"nome": "Campo do Cedro / Santa Rosa", "descricao": "campo comunitário próximo ao povoado Cedro / Santa Rosa (região de IEMA)", "localizacao": "Cedro / Santa Rosa"},
+    {"nome": "Campo do Cedro", "descricao": "campo comunitário próximo ao povoado Cedro", "localizacao": "Cedro / Santa Rosa"},
     {"nome": "Campo / Quadra do Ruy Vaz", "descricao": "campo comunitário no povoado Ruy Vaz", "localizacao": "Ruy Vaz"},
-    {"nome": "Campo/Quadra da Paróquia / Comunidade (Centro)", "descricao": "área usada por comunidades/igrejas para festas e peladas", "localizacao": "próximo à Matriz / centro histórico"},
     {"nome": "Ginásio Poliesportivo - Burgos", "localizacao": "Burgos"},
     {"nome": "Ginásio Poliesportivo - Veneza", "localizacao": "Veneza"}
   ],
