@@ -14,29 +14,32 @@
 
 <body class="light-mode">
 
-    <div id="chat-container">
-        <h1>
+    <div id="chat-container" style="max-width:800px; margin:40px auto; text-align:center; font-family:'Trebuchet MS','Segoe UI',Roboto,Arial,sans-serif;">
+        <h1 style="display:flex; align-items:center; justify-content:center; gap:12px;">
             <span>
                 <i class="fas fa-map-marked-alt"></i> Guia Digital - LocalizAxixá
             </span>
-            <div class="theme-toggle" onclick="toggleTheme()">
+            <div class="theme-toggle" onclick="toggleTheme()" style="margin-left:8px;">
                 <i id="theme-icon" class="fas fa-moon"></i>
             </div>
         </h1>
 
-        <div id="chat-box">
+        <div id="chat-box" style="margin:18px auto; text-align:left;">
             <div class="message LocalizAxixá">
-                Olá, meu amigo! Sou o guia digital da cidade. O que você gostaria de saber sobre nossa querida Axixá?
+                Olá! Sou o guia digital de Axixá. Pergunte-me sobre pontos turísticos, lojas, escolas, igrejas ou a história da cidade. Como posso ajudar?
             </div>
         </div>
 
-        <form id="input-area">
-            <input type="text" id="user-input" placeholder="Pergunte algo..." autocomplete="off">
-            <button type="submit" id="send-button" disabled>➤</button>
+        <form id="input-area" style="display:flex; justify-content:center; gap:8px; align-items:center;">
+            <input type="text" id="user-input" placeholder="Pergunte algo..." autocomplete="off" style="width:70%; padding:10px 12px; border-radius:8px; border:1px solid #ccc;">
+            <button type="submit" id="send-button" disabled style="padding:10px 14px; border-radius:8px;">➤</button>
         </form>
 
-        <div class="copyright">
+        <div style="height:14px;"></div>
+
+        <div class="copyright" style="text-align:center; font-size:0.9rem;">
             © 2025 - Grupo de Análise e Desenvolvimento de Sistemas. Todos os direitos reservados.
+            <div style="height:8px;"></div>
             <span>Guilherme Moreira Santos, José Ribamar Andrade Santos Júnior, Marina de Jesus Lima Muniz e Rikelmy Rabelo Freitas.</span>
         </div>
     </div>
