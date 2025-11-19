@@ -34,14 +34,18 @@ else:
     system_prompt = None
 
 def conversar_com_guia(pergunta: str, system_prompt: str, item_data_json: str = None):
-    
+    # MOCK PARA TESTES AUTOMATIZADOS
+    # Se a variável de ambiente MODO_TESTE estiver ativa, não gasta API
+    if os.getenv("MODO_TESTE") == "True":
+        return "Resposta simulada (Modo Teste)"
+
     if not system_prompt:
         return "[Erro crítico: O prompt do sistema não foi carregado.]"
 
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https.seu-site-ou-projeto.com",
+        "HTTP-Referer": "https://seusite.com",
         "X-Title": "Guia Digital - LocalizAxixá",
     }
     
@@ -50,7 +54,7 @@ def conversar_com_guia(pergunta: str, system_prompt: str, item_data_json: str = 
     if item_data_json:
         messages.append({
             "role": "system", 
-            "content": f"INSTRUÇÃO IMPORTANTE: Você encontrou dados locais para a pergunta do usuário. Responda à pergunta do usuário de forma natural e apresente *apenas* os dados factuais fornecidos abaixo. Siga as regras de formatação do seu prompt principal. DADOS FACTUAIS: {item_data_json}"
+            "content": f"INSTRUÇÃO IMPORTANTE: Você encontrou dados locais para a pergunta. Responda usando APENAS estes dados: {item_data_json}"
         })
     
     messages.append({"role": "user", "content": pergunta})
@@ -66,28 +70,27 @@ def conversar_com_guia(pergunta: str, system_prompt: str, item_data_json: str = 
         response = requests.post(OPENROUTER_API_URL, headers=headers, json=payload)
         response.raise_for_status() 
         data = response.json()
+        return data["choices"][0]["message"]["content"].strip()
 
-        content = data["choices"][0]["message"]["content"]
-        return content.strip()
-
-    except requests.exceptions.RequestException as e:
-        return f"[Erro de conexão com a API: {e}]"
-    except KeyError:
-        return f"[Erro: resposta inesperada da API: {data}]"
     except Exception as e:
-        return f"[Erro inesperado: {e}]"
+        return f"[Erro na IA: {e}]"
 
 def normalize_text(text: str) -> str:
     if not text: return ""
     text = text.lower()
-    text = re.sub(r'[áàâãä]', 'a', text)
-    text = re.sub(r'[éèêë]', 'e', text)
-    text = re.sub(r'[íìîï]', 'i', text)
-    text = re.sub(r'[óòôõö]', 'o', text)
-    text = re.sub(r'[úùûü]', 'u', text)
-    text = re.sub(r'[ç]', 'c', text)
+    text = unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('utf-8')
     text = re.sub(r'[^\w\s]', '', text)
     return text
+
+# Lista global de Stop Words (Palavras para ignorar na busca)
+STOP_WORDS = {
+    'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
+    'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
+    'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localizacao', 'qual', 'e',
+    'gostaria', 'queria', 'quero', 'saber', 'informacoes', 'info', 'axixa',
+    'tem', 'tinha', 'existe', 'ha', 'algum', 'alguma', 'uns', 'umas', 'um', 'uma',
+    'banho', 'tomar', 'ir', 'chegar', 'encontrar', 'loja', 'lojas'
+}
 
 def find_item_by_name(pergunta_lower: str, data: dict):
     if not data or not pergunta_lower:
@@ -95,16 +98,8 @@ def find_item_by_name(pergunta_lower: str, data: dict):
 
     pergunta_limpa = normalize_text(pergunta_lower)
     
-    stop_words = {
-        'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
-        'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
-        'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localizacao', 'qual', 'e',
-        'gostaria', 'queria', 'saber', 'informacoes', 'info', 'axixa',
-        'loja', 'lojas'
-    }
-    
     pergunta_keywords = {
-        word for word in pergunta_limpa.split() if word not in stop_words and len(word) > 2
+        word for word in pergunta_limpa.split() if word not in STOP_WORDS and len(word) > 2
     }
     
     if not pergunta_keywords:
@@ -118,18 +113,19 @@ def find_item_by_name(pergunta_lower: str, data: dict):
 
     for key in lists_to_search:
         for item in data.get(key, []):
-            nome = (item.get("nome", "") or item.get("orgao", ""))
-            local = (item.get("localizacao", "") or item.get("endereco", ""))
-            search_text_limpo = normalize_text(nome + " " + local)
+            # Busca no nome, órgão, endereço e descrição
+            texto_item = (item.get("nome", "") or item.get("orgao", "")) + " " + \
+                         (item.get("localizacao", "") or item.get("endereco", "")) + " " + \
+                         item.get("descricao", "")
             
-            if not search_text_limpo.strip():
-                continue
+            search_text_limpo = normalize_text(texto_item)
             
             current_match_score = 0
             for keyword in pergunta_keywords:
                 if keyword in search_text_limpo:
-                    current_match_score += len(keyword)
+                    current_match_score += 1 # Pontuação simples
             
+            # Regra: Se o usuário digitou 2 palavras-chave válidas, pelo menos 1 deve estar presente
             if current_match_score > best_match_score:
                 best_match_score = current_match_score
                 found_item = item
@@ -140,7 +136,6 @@ def find_item_by_name(pergunta_lower: str, data: dict):
 def create_search_map_link(query: str) -> str:
     full_query = f"{query}, Axixá, Maranhão"
     encoded_query = urllib.parse.quote(full_query)
-    
     return f"https://www.google.com/maps/search/{encoded_query}"
 
 @app.route("/")
@@ -149,7 +144,6 @@ def index():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    
     data = request.json
     pergunta = data.get("pergunta")
     pergunta_lower = pergunta.lower() if pergunta else ""
@@ -158,18 +152,10 @@ def chat():
         return jsonify({"erro": "Nenhuma pergunta fornecida."}), 400
 
     item_encontrado = None
-    category_key = None
     mapa_link = None
     local_nome = None
     item_data_json = None
     
-    stop_words_list = {
-        'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
-        'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
-        'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localizacao', 'qual', 'e',
-        'gostaria', 'queria', 'saber', 'informacoes', 'info', 'axixa'
-    }
-
     if prompt_data:
         is_historia = any(word in pergunta_lower for word in ["história", "historia", "fundação", "fundacao", "origem"])
 
@@ -178,83 +164,83 @@ def chat():
             if historia_data:
                 item_data_json = json.dumps(historia_data, ensure_ascii=False)
         else:
-            categoria_encontrada = None
+            # Lógica de Categorias Melhorada
             pergunta_normalizada = normalize_text(pergunta_lower)
-            pergunta_normalizada_set = set(pergunta_normalizada.split())
             
-            categoria_keywords = {}
+            # Dicionário de gatilhos -> (chave_json, palavras_para_remover_da_busca)
+            # Note que para 'prefeitura' e 'iema', a lista de remoção é vazia ou reduzida
+            regras_categoria = {
+                "campos_esportivos": (["quadra", "campo", "ginasio", "estadio"], ["quadra", "campo", "ginasio", "estadio"]),
+                "igrejas": (["igreja", "paroquia", "religiao"], ["igreja", "paroquia"]),
+                "lojas": (["loja", "comprar", "mercado", "farmacia", "vende"], ["loja", "comprar", "mercado"]),
+                "escolas": (["escola", "colegio", "estudar", "iema"], ["escola", "colegio", "estudar"]), # IEMA mantido na busca
+                "predios_municipais": (["prefeitura", "secretaria", "cras"], ["secretaria", "predio"]), # Prefeitura mantida na busca
+                "pontos_turisticos": (["turismo", "passear", "banho", "rio", "balneario", "praca"], ["turismo", "passear", "banho", "rio", "balneario"]),
+                "cemiterios": (["cemiterio"], ["cemiterio"]),
+                "pousadas_dormitorios": (["pousada", "hotel", "dormir"], ["pousada", "hotel"])
+            }
+
+            categoria_selecionada = None
+            keywords_to_remove = []
+
+            for chave_json, (gatilhos, remover) in regras_categoria.items():
+                if any(g in pergunta_normalizada for g in gatilhos):
+                    categoria_selecionada = chave_json
+                    keywords_to_remove = remover
+                    break
             
-            if any(word in pergunta_normalizada for word in ["quadra", "quadras", "campo", "campos", "esporte", "esportivos", "ginasio", "ginasios"]):
-                categoria_encontrada = "campos_esportivos"
-                categoria_keywords = {"quadra", "quadras", "campo", "campos", "esporte", "esportivos", "ginasio", "ginasios"}
-            elif any(word in pergunta_normalizada for word in ["igreja", "igrejas", "paroquia", "paroquias", "religiao", "religioso"]):
-                categoria_encontrada = "igrejas"
-                categoria_keywords = {"igreja", "igrejas", "paroquia", "paroquias", "religiao", "religioso"}
-            elif any(word in pergunta_normalizada for word in ["loja", "lojas", "comprar", "comercio", "mercado", "farmacia"]):
-                categoria_encontrada = "lojas"
-                categoria_keywords = {"loja", "lojas", "comprar", "comercio", "mercado", "farmacia"}
-            elif any(word in pergunta_normalizada for word in ["escola", "escolas", "colegio", "colegios", "estudar", "iema"]):
-                categoria_encontrada = "escolas"
-                categoria_keywords = {"escola", "escolas", "colegio", "colegios", "estudar", "iema"}
-            elif any(word in pergunta_normalizada for word in ["prefeitura", "predio municipal", "predios municipais", "secretaria", "secretarias"]):
-                categoria_encontrada = "predios_municipais"
-                categoria_keywords = {"prefeitura", "predio", "municipal", "predios", "municipais", "secretaria", "secretarias"}
-            elif any(word in pergunta_normalizada for word in ["ponto turistico", "pontos turisticos", "turismo", "passear", "visitar", "praca", "pracas", "banho", "rio", "balneario", "balnearios", "historico", "historicos", "ruina", "ruinas"]):
-                categoria_encontrada = "pontos_turisticos"
-                categoria_keywords = {"ponto", "pontos", "turistico", "turisticos", "turismo", "passear", "visitar", "praca", "pracas", "banho", "rio", "balneario", "balnearios", "historico", "historicos", "ruina", "ruinas"}
-            elif any(word in pergunta_normalizada for word in ["cemiterio", "cemiterios"]):
-                categoria_encontrada = "cemiterios"
-                categoria_keywords = {"cemiterio", "cemiterios"}
-            elif any(word in pergunta_normalizada for word in ["pousada", "pousadas", "dormir", "hotel", "hoteis", "hospedagem", "hospedagens", "dormitorio", "dormitorios"]):
-                categoria_encontrada = "pousadas_dormitorios"
-                categoria_keywords = {"pousada", "pousadas", "dormir", "hotel", "hoteis", "hospedagem", "hospedagens", "dormitorio", "dormitorios"}
-            elif any(word in pergunta_normalizada for word in ["restaurante", "comida", "alimentacao", "alimentação", "comer", "prato", "pratos", "tipico", "tipicos"]):
-                categoria_encontrada = "lojas"
-                categoria_keywords = {"restaurante", "comida", "alimentacao", "alimentação", "comer", "prato", "pratos", "tipico", "tipicos"}
-            
-            if categoria_encontrada:
-                dados_categoria = prompt_data.get(categoria_encontrada)
+            # Se achou categoria, tenta filtrar dentro dela
+            busca_categoria_sucesso = False
+            if categoria_selecionada:
+                dados_raw = prompt_data.get(categoria_selecionada, [])
                 
-                sub_keywords = pergunta_normalizada_set - categoria_keywords - stop_words_list
+                # Cria termos de busca removendo stop words e palavras da categoria (mas mantém nomes próprios)
+                termos_busca = set(pergunta_normalizada.split()) - set(keywords_to_remove) - STOP_WORDS
                 
-                if sub_keywords and dados_categoria:
-                    filtered_data = []
-                    for item in dados_categoria:
-                        texto_busca = (item.get("descricao", "") + " " + 
-                                      (item.get("nome", "") or item.get("orgao", "")) + " " + 
-                                      (item.get("localizacao", "") or item.get("endereco", "")))
-                        search_text = normalize_text(texto_busca)
-                        
-                        if all(kw in search_text for kw in sub_keywords):
+                filtered_data = []
+                
+                # Se não sobrou termo nenhum (ex: "onde fica a prefeitura?"), busca pela própria categoria triggering word
+                if not termos_busca and categoria_selecionada == "predios_municipais":
+                    termos_busca = {"prefeitura"} # Força busca por prefeitura
+
+                if termos_busca:
+                    for item in dados_raw:
+                        texto_busca = normalize_text(
+                            (item.get("nome", "") or item.get("orgao", "")) + " " + 
+                            (item.get("localizacao", "") or item.get("endereco", ""))
+                        )
+                        # Verifica se ALGUM termo relevante está no item (busca mais flexível)
+                        if any(t in texto_busca for t in termos_busca):
                             filtered_data.append(item)
-                    
-                    if filtered_data:
-                        dados_categoria = filtered_data
                 
-                if dados_categoria:
-                    if len(dados_categoria) == 1:
-                        item_encontrado = dados_categoria[0]
+                if filtered_data:
+                    busca_categoria_sucesso = True
+                    if len(filtered_data) == 1:
+                        item_encontrado = filtered_data[0]
                         item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
                     else:
-                        item_data_json = json.dumps(dados_categoria, ensure_ascii=False)
+                        item_data_json = json.dumps(filtered_data, ensure_ascii=False)
 
+            # FALLBACK: Se a busca por categoria falhou (ou achou 0 itens), tenta busca global
+            # Isso resolve o caso "Igreja da Luz" (que é ponto turístico, mas usuário chamou de igreja)
             if not item_data_json:
-                item_encontrado, category_key = find_item_by_name(pergunta_lower, prompt_data)
+                item_encontrado, _ = find_item_by_name(pergunta_lower, prompt_data)
                 if item_encontrado:
                     item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
 
+    # Gera links e finaliza
     if item_encontrado: 
         local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
         endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")
         
         query_mapa = local_nome
-        if endereco and endereco.lower() not in ["centro", "zona rural", "belém - zona rural"]:
+        if endereco and endereco.lower() not in ["centro", "zona rural"]:
             query_mapa = f"{local_nome}, {endereco}"
         mapa_link = create_search_map_link(query_mapa)
-    
-    if not system_prompt:
-        return jsonify({"erro": "Prompt do sistema não carregado no servidor."}), 500
     
     resposta_ia = conversar_com_guia(pergunta, system_prompt, item_data_json)
 
     return jsonify({"resposta": resposta_ia, "mapa_link": mapa_link, "local_nome": local_nome})
+
+if __name__ == "__main__":
+    app.run(debug=True)
