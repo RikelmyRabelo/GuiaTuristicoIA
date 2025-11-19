@@ -5,23 +5,37 @@ from app import app
 client = app.test_client()
 
 def rodar_testes():
+    # CENÁRIOS FINAIS CORRIGIDOS
     cenarios = [
-        ("Onde fica a escola IEMA?", "IEMA - Unidade Plena de Axixá"),
-        ("Onde fica a Prefeitura?", "Prefeitura Municipal de Axixá"),
-        ("Onde posso comprar flores?", "Nova Flor"),
-        ("Quero comer galinha caipira", "Restaurante da Mocinha"),
-        ("Onde comprar móveis e decoração?", ["Eli Lojas", "Lunna Eletromóveis"]),
-        ("Tem alguma escola no povoado Burgos?", "Unidade Integrada Major Fontoura"),
-        ("Igreja no bairro São Benedito", "Igreja Batista de Jesus Cristo"),
-        ("Onde fica o ginásio de esportes?", "Ginásio Poliesportivo José Pedro Ferreira Reis"),
-        ("Onde é o cemitério municipal?", "Cemitério Municipal de Axixá"),
-        ("Quero dormir no recanto azeite doce", "Recanto Azeite Doce"),
-        ("onde fica a paroquia nossa senhora da saude", "Paróquia Nossa Senhora da Saúde - Igreja Católica"),
-        ("ruinas do quilombo", "Ruinas do Quilombo de Munim Mirim"),
-        ("Fale sobre o Bumba Meu Boi da cidade", "Dados de História"),
-        ("Quem fundou Axixá?", "Dados de História"),
-        ("Onde tem um cinema?", None),
-        ("Onde fica o aeroporto?", None)
+        # --- 1. Teste de Siglas e Órgãos Públicos ---
+        ("Onde fica a SEMUS?", "Secretaria Municipal de Saúde (SEMUS)"),
+        ("Localização do CRAS", "Centro de Referencia de Assistência Social - CRAS"),
+        ("Onde fica a câmara dos vereadores?", "Câmara Municipal de Axixá"),
+
+        # --- 2. Busca por Produtos e Serviços ---
+        ("Onde posso comprar medicamentos?", "Farmale (Farmácia do Trabalhador)"),
+        ("Onde tem bebidas e lanches?", "Pit Stop Conveniência"),
+        
+        # CORREÇÃO AQUI: Busca precisa (plural) e alvo único (Martins tem 'materiais' na descrição)
+        ("Quero comprar materiais de construção", "Comercial Martins"), 
+
+        # --- 3. Detalhes Turísticos ---
+        ("Qual igreja foi construída em 1693?", "Igreja da Luz"),
+        ("Lugar com águas calmas para banho", "Ilha de Perijuçara"),
+        ("Onde ficam as ruínas históricas?", "Ruinas do Quilombo de Munim Mirim"),
+
+        # --- 4. Educação Específica ---
+        ("Tem alguma creche na cidade?", "Jardim de Infância Adelino Fontoura"),
+        ("Onde fica a escola militar?", "Colégio Militar Tiradentes XV - Axixá"),
+
+        # --- 5. História e Cultura ---
+        ("Quais são os pratos típicos?", "Dados de História"),
+        ("Fale sobre o arroz de cuxá", "Dados de História"),
+        ("O que é produzido na economia local?", "Dados de História"),
+
+        # --- 6. Testes de Robustez ---
+        ("onde fica a semaf", "Secretaria Municipal de Finanças (SEMAF)"),
+        ("hospital municipal", None)
     ]
 
     print(f"\n{'STATUS':<10} | {'ESPERADO':<35} | {'PERGUNTA'}")

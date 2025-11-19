@@ -80,13 +80,14 @@ def normalize_text(text: str) -> str:
     text = re.sub(r'[^\w\s]', '', text)
     return text
 
+# STOP WORDS (Lista limpa para evitar falso-negativo em 'material')
 STOP_WORDS = {
     'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
     'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
     'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localizacao', 'qual', 'e',
     'gostaria', 'queria', 'quero', 'saber', 'informacoes', 'info', 'axixa',
     'tem', 'tinha', 'existe', 'ha', 'algum', 'alguma', 'uns', 'umas', 'um', 'uma',
-    'banho', 'tomar', 'ir', 'chegar', 'encontrar', 'loja', 'lojas'
+    'banho', 'tomar', 'ir', 'chegar', 'encontrar', 'loja', 'lojas', 'municipal'
 }
 
 def find_item_by_name(pergunta_lower: str, data: dict):
@@ -155,7 +156,9 @@ def chat():
         termos_historia = [
             "história", "historia", "fundação", "fundacao", "origem", 
             "fundou", "criou", "surgiu", "começou", 
-            "cultura", "folclore", "bumba", "boi", "festa"
+            "cultura", "folclore", "bumba", "boi", "festa",
+            "prato", "comida", "tipico", "típico", "economia", "produz",
+            "arroz", "cuxa", "cuxá"
         ]
         is_historia = any(word in pergunta_lower for word in termos_historia)
 
@@ -169,9 +172,9 @@ def chat():
             regras_categoria = {
                 "campos_esportivos": (["quadra", "campo", "ginasio", "estadio"], ["quadra", "campo", "ginasio", "estadio"]),
                 "igrejas": (["igreja", "paroquia", "religiao"], ["igreja", "paroquia"]),
-                "lojas": (["loja", "comprar", "mercado", "farmacia", "vende"], ["loja", "comprar", "mercado"]),
-                "escolas": (["escola", "colegio", "estudar", "iema"], ["escola", "colegio", "estudar"]),
-                "predios_municipais": (["prefeitura", "secretaria", "cras"], ["secretaria", "predio"]),
+                "lojas": (["loja", "comprar", "mercado", "farmacia", "vende", "material", "materiais", "construcao"], ["loja", "comprar", "mercado"]),
+                "escolas": (["escola", "colegio", "estudar", "iema", "creche", "infancia"], ["escola", "colegio", "estudar"]),
+                "predios_municipais": (["prefeitura", "secretaria", "cras", "camara", "vereador", "vereadores"], ["secretaria", "predio"]),
                 "pontos_turisticos": (["turismo", "passear", "banho", "rio", "balneario", "praca"], ["turismo", "passear", "banho", "rio", "balneario"]),
                 "cemiterios": (["cemiterio"], ["cemiterio"]),
                 "pousadas_dormitorios": (["pousada", "hotel", "dormir"], ["pousada", "hotel"])
@@ -198,7 +201,8 @@ def chat():
                     for item in dados_raw:
                         texto_busca = normalize_text(
                             (item.get("nome", "") or item.get("orgao", "")) + " " + 
-                            (item.get("localizacao", "") or item.get("endereco", ""))
+                            (item.get("localizacao", "") or item.get("endereco", "")) + " " +
+                            item.get("descricao", "")
                         )
                         if any(t in texto_busca for t in termos_busca):
                             filtered_data.append(item)
