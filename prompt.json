@@ -1,6 +1,6 @@
 ﻿{
   "system_prompt": [
-    "Você é um Guia Digital, um assistente virtual especializado na cidade de Axixá.",
+    "Você é o Guia Digital - LocalizAxixá, um assistente virtual especializado na cidade de Axixá.",
     "Seu papel é atuar como um guia turístico e intérprete cultural digital, oferecendo informações detalhadas,",
     "confiáveis e atualizadas sobre o município. Fale sempre com sabedoria, calma e clareza, mantendo um tom",
     "acolhedor e informativo, como um morador experiente que conhece a história e o cotidiano da cidade.",
@@ -29,15 +29,13 @@
     "fundacao": "A região foi colonizada por portugueses, liderados por Manoel José de Pinho. O povoado cresceu às margens esquerdas do Rio Munim.",
     "emancipacao": "A história política de Axixá é marcada por sua relação com a cidade de Icatu. Foi elevada a vila em 17 de abril de 1917 (Lei nº 758), mas foi reanexada a Icatu em 1930. Reconquistou sua autonomia definitiva em 12 de junho de 1935 (Decreto nº 844).",
     "cultura": "Axixá é um grande polo cultural, famoso pelo seu Bumba Meu Boi no sotaque de orquestra, sendo o 'Boi de Axixá' o seu maior representante. A cidade também celebra o Tambor de Crioula, quadrilhas e outras manifestações folclóricas.",
-    "economia": "A economia local se baseia na agricultura, com destaque para a produção de coco e mandioca, e em pequenas indústrias, como a de sabão de andiroba.",
-    "gastronomia": "A culinária de Axixá é rica em pratos típicos maranhenses, como o arroz de cuxá, peixe frito com farinha d'água e doces feitos com frutos locais."
+    "economia": "A economia local se baseia na agricultura, com destaque para a produção de coco e mandioca, e em pequenas indústrias, como a de sabão de andiroba."
   },
   "escolas": [
     {"nome": "Unidade Integrada Major Fontoura", "localizacao": "Praça Santa Luzia, Burgos"},
     {"nome": "UI Professor Manoel Santana Baldez", "localizacao": "Perijucara", "telefone": "(98) 99609-5574"},
     {"nome": "UI Arcelino Rodrigues Tavares", "localizacao": "Vale Quem Tem", "telefone": "(98) 98522-2729"},
     {"nome": "UE José Ribamar Fontoura", "localizacao ": "Munim Mirim", "telefone": "(98) 99152-4244"},
-    {"nome": "UI Delarey Cardoso Nunes", "localizacao ": "Santa Rosa"},
     {"nome": "UE Axixaense", "localizacao": "Ruy Vaz / Rua São Pedro"},
     {"nome": "Centro de Ensino Estado do Acre", "descricao": "Escola estadual de Ensino Médio"},
     {"nome": "IEMA - Unidade Plena de Axixá", "localizacao": "BR 402 - Santa Rosa", "descricao": "Ensino Médio técnico/tempo integral"},
@@ -73,11 +71,7 @@
     {"nome": "N.C. Distribuidora", "descricao": "atacado e distribuição"},
     {"nome": "Comercial Martins", "descricao": "mercado e materiais básicos"},
     {"nome": "Loja10", "descricao": "utilidades domésticas e armarinho"},
-    {"nome": "Dany Multimarcas", "descricao": "roupas e calçados"},
-    {"nome": "Restaurante da Mocinha", "descricao": "restaurante que oferece pratos tipicos da cidade, como por exemplo, galinha caipira e churrasco", "localizacao": "Riachão"},
-    {"nome": "Juçara Açaí - Merão e Edite", "descricao": "restaurate de que oferece pratos tipicos da cidade, como por exemplo, a juçara com camarão", "localizacao": "Ruy Vaz"},
-    {"nome": "Mercadinho LN", "descricao": "mercearia e produtos básicos", "localizacao": "Riachão"}
-
+    {"nome": "Dany Multimarcas", "descricao": "roupas e calçados"}
   ],
   "pontos_turisticos": [
     {"nome": "Igreja da Luz", "descricao": "patrimônio histórico, construída por volta de 1693", "localizacao": "Belém - zona rural", "acessibilidade": "acesso por estrada rural"},
@@ -85,7 +79,6 @@
     {"nome": "Praça e Igreja do Centro", "descricao": "Matriz - Nossa Senhora da Saúde / Santo Antônio", "localizacao": "Centro de Axixá"},
     {"nome": "Balneario Santa Vitória", "descricao": "Local para banho muito bem ambientado", "localizacao": "Vale Quem Tem"},
     {"nome": "Ruinas do Quilombo de Munim Mirim", "descricao": "Restos de contruções onde se mantinha os escravizados no passado, patrimonio historico da cidade", "localizacao": "Munim Mirim"}
-
   ],
   "predios_municipais": [
     {"orgao": "Prefeitura Municipal de Axixá", "endereco": "Rua Adelino Fontoura, 84 Centro", "telefone": "(98) 3453-1720"},
@@ -103,6 +96,7 @@
     {"orgao": "Secretaria Municipal de Planejamento e Articulação Governamental de Axixá (SEMPAN)", "endereco": "Localizado na prefeitura da cidade", "telefone": "(98) 98842-3729"}
   ],
   "igrejas": [
+    {"nome": "Igreja da Luz", "descricao": "patrimônio histórico, construída por volta de 1693", "endereco": "Belém - zona rural", "acessibilidade": "acesso por estrada rural"},
     {"nome": "Paróquia Nossa Senhora da Saúde - Igreja Católica", "tipo": "Católica (matriz)", "endereco": "Praça da Saúde, Centro"},
     {"nome": "Igreja Evangélica Assembleia de Deus", "tipo": "Evangélica", "endereco": "Rua Av. Evaristo, Centro"},
     {"nome": "Igreja Batista de Jesus Cristo", "tipo": "Evangélica (Batista)", "endereco": "Rua Delarey Cardoso Nunes, 12 - Bairro São Benedito"},
@@ -117,8 +111,9 @@
     {"nome": "Campo da Rua da Sapucaia", "descricao": "campo de futebol (várzea/gramado)", "localizacao": "Rua da Sapucaia, Centro / proximidades"},
     {"nome": "Campo do Bomfim", "descricao": "campo de futebol do povoado Bomfim", "localizacao": "Povoado Bomfim"},
     {"nome": "Campo do Vale Quem Tem", "descricao": "campo no povoado Vale Quem Tem", "localizacao": "Vale Quem Tem"},
-    {"nome": "Campo do Cedro", "descricao": "campo comunitário próximo ao povoado Cedro", "localizacao": "Cedro / Santa Rosa"},
+    {"nome": "Campo do Cedro / Santa Rosa", "descricao": "campo comunitário próximo ao povoado Cedro / Santa Rosa (região de IEMA)", "localizacao": "Cedro / Santa Rosa"},
     {"nome": "Campo / Quadra do Ruy Vaz", "descricao": "campo comunitário no povoado Ruy Vaz", "localizacao": "Ruy Vaz"},
+    {"nome": "Campo/Quadra da Paróquia / Comunidade (Centro)", "descricao": "área usada por comunidades/igrejas para festas e peladas", "localizacao": "próximo à Matriz / centro histórico"},
     {"nome": "Ginásio Poliesportivo - Burgos", "localizacao": "Burgos"},
     {"nome": "Ginásio Poliesportivo - Veneza", "localizacao": "Veneza"}
   ],
