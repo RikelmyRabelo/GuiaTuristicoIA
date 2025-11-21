@@ -1,6 +1,8 @@
 import requests
 import os
 import json
+import csv
+import datetime
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, render_template
 import urllib.parse
@@ -15,6 +17,9 @@ MODEL_NAME = "deepseek/deepseek-chat"
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 PROMPT_FILE = os.path.join(APP_ROOT, "prompt.json")
+LOG_FILE = os.path.join(APP_ROOT, "usage_logs.csv")
+
+print(f"📂 O arquivo de log será salvo em: {LOG_FILE}")
 
 app = Flask(__name__)
 
@@ -47,6 +52,26 @@ STOP_WORDS = {
     'tem', 'tinha', 'existe', 'ha', 'que', 'alguma', 'algum', 'uns', 'umas',
     'bairro', 'rua', 'av', 'avenida', 'povoado'
 }
+
+def log_interaction(pergunta, resposta, local_encontrado):
+    """Registra a interação em um arquivo CSV para análise futura."""
+    file_exists = os.path.isfile(LOG_FILE)
+    try:
+        with open(LOG_FILE, 'a', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ['data_hora', 'pergunta_usuario', 'resposta_ia', 'local_encontrado']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            
+            if not file_exists:
+                writer.writeheader()
+            
+            writer.writerow({
+                'data_hora': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                'pergunta_usuario': pergunta,
+                'resposta_ia': resposta[:100] + "..." if len(resposta) > 100 else resposta, # Salva resumo
+                'local_encontrado': local_encontrado or "Nenhum"
+            })
+    except Exception as e:
+        print(f"[Erro Log] Não foi possível salvar o log: {e}")
 
 def load_prompt_data(file_path: str) -> dict:
     try:
@@ -99,7 +124,7 @@ if prompt_data:
 else:
     system_prompt = None
 
-def conversar_com_chat(pergunta: str, system_prompt: str, item_data_json: str = None):
+def conversar_com_chat(pergunta: str, system_prompt: str, item_data_json: str = None, historico: list = None):
     if not system_prompt:
         return "[Erro crítico: O prompt do sistema não foi carregado.]"
 
@@ -110,7 +135,12 @@ def conversar_com_chat(pergunta: str, system_prompt: str, item_data_json: str = 
         "X-Title": "Guia Digital - LocalizAxixá",
     }
     
+    # Constrói a lista de mensagens
     messages = [{"role": "system", "content": system_prompt}]
+    
+    # Adiciona histórico se existir (limitado às últimas 4 mensagens para economizar tokens)
+    if historico:
+        messages.extend(historico[-4:])
     
     if item_data_json:
         messages.append({
@@ -199,6 +229,7 @@ def index():
 def chat():
     data = request.json
     pergunta = data.get("pergunta", "")
+    historico = data.get("historico", []) # Recebe o histórico do frontend
     pergunta_lower = pergunta.lower()
 
     if not pergunta:
@@ -225,6 +256,7 @@ def chat():
                  "Estou aqui para te ajudar a encontrar escolas, lojas, pontos turísticos, "
                  "órgãos públicos e conhecer a história da cidade. Como posso ajudar?"
              )
+             log_interaction(pergunta, resposta_saudacao, "Saudação")
              return jsonify({"resposta": resposta_saudacao, "mapa_link": None, "local_nome": "Saudação"})
 
         criador_keywords = ["quem fez", "quem criou", "quem desenvolveu", "criador", "desenvolvedor", "quem e voce"]
@@ -237,6 +269,7 @@ def chat():
                  "**Rikelmy Rabelo Freitas**\n\n"
                  "Estou aqui para ajudar com informações sobre a cidade!"
              )
+             log_interaction(pergunta, resposta_criador, "Info dos Criadores")
              return jsonify({"resposta": resposta_criador, "mapa_link": None, "local_nome": "Info dos Criadores"})
 
         historia_keywords = ["historia", "fundacao", "origem", "emancipacao", "fundou", "criou", "economia", "cultura", "bumba"]
@@ -244,12 +277,14 @@ def chat():
             historia_data = prompt_data.get("historia_axixa")
             if historia_data:
                 item_data_json = json.dumps(historia_data, ensure_ascii=False)
+                local_nome = "Dados Históricos"
         
         elif "comida" in pergunta_lower or "prato" in pergunta_lower:
             if any(x in pergunta_lower for x in ["quais", "lista", "todas", "tipos", "sao"]):
                  comidas = prompt_data.get("comidas_tipicas", [])
                  if comidas:
                      item_data_json = json.dumps(comidas, ensure_ascii=False)
+                     local_nome = "Lista de Comidas"
             else:
                 item_encontrado = find_item_smart(pergunta)
 
@@ -270,7 +305,11 @@ def chat():
     if not system_prompt:
         return jsonify({"erro": "Prompt do sistema não carregado no servidor."}), 500
     
-    resposta_ia = conversar_com_chat(pergunta, system_prompt, item_data_json)
+    # Passa o histórico para a função da IA
+    resposta_ia = conversar_com_chat(pergunta, system_prompt, item_data_json, historico)
+
+    # Loga a interação
+    log_interaction(pergunta, resposta_ia, local_nome)
 
     return jsonify({"resposta": resposta_ia, "mapa_link": mapa_link, "local_nome": local_nome})
 
