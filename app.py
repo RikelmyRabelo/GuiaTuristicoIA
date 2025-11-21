@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify, render_template
 import urllib.parse
 import re
 import unicodedata
+from rapidfuzz import process, fuzz, utils
 
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -71,107 +72,107 @@ def conversar_com_chat(pergunta: str, system_prompt: str, item_data_json: str = 
         return f"[Erro inesperado: {e}]"
 
 def normalize_text(text: str) -> str:
+    """Remove acentos, caracteres especiais e converte para minúsculas."""
     if not text: return ""
     text = text.lower()
-    text = re.sub(r'[áàâãä]', 'a', text)
-    text = re.sub(r'[éèêë]', 'e', text)
-    text = re.sub(r'[íìîï]', 'i', text)
-    text = re.sub(r'[óòôõö]', 'o', text)
-    text = re.sub(r'[úùûü]', 'u', text)
-    text = re.sub(r'[ç]', 'c', text)
-    text = re.sub(r'[^\w\s]', '', text)
-    return text
+    text = unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('utf-8')
+    text = re.sub(r'[^\w\s]', ' ', text)
+    return text.strip()
 
-def find_item_by_name(pergunta_lower: str, data: dict):
-    if not data or not pergunta_lower:
-        return None, None
+def find_item_smart(pergunta: str, data: dict):
+    if not data or not pergunta:
+        return None
 
-    pergunta_limpa = normalize_text(pergunta_lower)
+    pergunta_limpa = normalize_text(pergunta)
     
-    # Stopwords
     stop_words = {
         'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
         'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
         'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localizacao', 'qual', 'quais', 'sao', 'sou',
         'gostaria', 'queria', 'saber', 'informacoes', 'info', 'axixa', 'cidade', 'municipio',
         'ola', 'oi', 'como', 'faco', 'pra', 'chegar', 'quero',
-        'tem', 'tinha', 'existe', 'ha', 'quem', 'que', 'alguma', 'algum', 'uns', 'umas',
-        'loja', 'lojas', 'bairro', 'rua', 'av', 'avenida', 'povoado'
+        'tem', 'tinha', 'existe', 'ha', 'que', 'alguma', 'algum', 'uns', 'umas',
+        'bairro', 'rua', 'av', 'avenida', 'povoado'
     }
     
-    pergunta_keywords = {
-        word for word in pergunta_limpa.split() if word not in stop_words and len(word) > 2
-    }
+    termos_importantes = [word for word in pergunta_limpa.split() if word not in stop_words and len(word) > 1]
     
-    if not pergunta_keywords:
-        return None, None
+    if not termos_importantes:
+        query_final = pergunta_limpa
+    else:
+        query_final = " ".join(termos_importantes)
 
     category_keywords_map = {
         "escolas": ["escola", "colegio", "creche", "estudar", "ensino", "infancia", "fundamental", "medio", "educacao", "unidade"],
-        "lojas": ["comprar", "mercado", "vende", "roupa", "moda", "moveis", "eletro", "calcados", "flor", "variedade", "material"],
-        "pontos_turisticos": ["turismo", "passear", "banho", "rio", "praca", "igreja", "visitar", "ruina", "lazer", "turistico", "historico"],
+        "lojas": ["loja", "comprar", "mercado", "vende", "roupa", "moda", "moveis", "eletro", "calcados", "flor", "variedade", "material", "construcao", "floricultura", "mercadinho", "farmacia", "conveniencia", "distribuidora"],
+        "pontos_turisticos": ["turismo", "passear", "banho", "rio", "praca", "igreja", "visitar", "ruina", "lazer", "turistico", "historico", "balneario"],
         "igrejas": ["igreja", "paroquia", "culto", "missa", "evangelica", "catolica", "assembleia", "batista"],
-        "predios_municipais": ["prefeitura", "secretaria", "cras", "camara", "orgao", "publico"],
+        "predios_municipais": ["prefeitura", "secretaria", "cras", "camara", "orgao", "publico", "saude", "assistencia"],
         "campos_esportivos": ["campo", "futebol", "ginasio", "jogo", "esporte", "quadra", "bola"],
         "cemiterios": ["cemiterio", "sepultamento", "enterrar"],
         "pousadas_dormitorios": ["pousada", "dormir", "hotel", "hospedagem", "quarto", "dormitorio"],
         "comidas_tipicas": ["comida", "tipica", "prato", "fome", "comer", "restaurante", "gastronomia", "culinaria", "almoco", "jantar", "peixe", "jucara"]
     }
 
-    lists_to_search = ["pontos_turisticos", "igrejas", "lojas", "escolas", "predios_municipais", "campos_esportivos", "cemiterios", "pousadas_dormitorios", "comidas_tipicas"]
-    
-    found_item = None
-    found_key = None
-    best_match_score = 0
-    
-    MIN_SCORE_THRESHOLD = 15
+    categorias_alvo = [
+        "pontos_turisticos", "escolas", "lojas", "predios_municipais", 
+        "igrejas", "campos_esportivos", "cemiterios", "pousadas_dormitorios", 
+        "comidas_tipicas"
+    ]
 
-    for key in lists_to_search:
-        category_bonus = 0
-        category_terms = category_keywords_map.get(key, [])
+    best_item = None
+    best_score = 0
+
+    for categoria in categorias_alvo:
+        cat_bonus = 0
+        keywords = category_keywords_map.get(categoria, [])
+        if any(kw in query_final for kw in keywords):
+            cat_bonus = 15
+
+        items = data.get(categoria, [])
         
-        if any(kw in pergunta_limpa for kw in category_terms):
-            category_bonus = 50 
-
-        for item in data.get(key, []):
-            nome = item.get("nome", "") or item.get("orgao", "")
-            descricao = item.get("descricao", "")
-            localizacao = item.get("localizacao", "") or item.get("endereco", "")
-            
-            nome_limpo = normalize_text(nome)
-            full_text_search = normalize_text(f"{nome} {descricao} {localizacao}")
-            
-            current_match_score = category_bonus
-            matched_keywords_count = 0
-            
-            for keyword in pergunta_keywords:
-                pattern = r'\b' + re.escape(keyword) + r'\b'
-                
-                if re.search(pattern, full_text_search):
-                    matched_keywords_count += 1
-                    if re.search(pattern, nome_limpo):
-                        current_match_score += (len(keyword) * 5)
-                    else:
-                        current_match_score += len(keyword)
-            
-            if matched_keywords_count > 0:
-                if current_match_score > best_match_score:
-                    best_match_score = current_match_score
-                    found_item = item
-                    found_key = key
-                        
-    if best_match_score < MIN_SCORE_THRESHOLD:
-        return None, None
+        candidatos_texto = []
+        candidatos_obj = []
         
-    return found_item, found_key
+        for item in items:
+            nome = item.get("nome") or item.get("orgao") or ""
+            local = item.get("localizacao") or item.get("endereco") or ""
+            desc = item.get("descricao") or item.get("descrição") or ""
+            
+            texto_cru = f"{nome} {desc} {local} {categoria}"
+            texto_busca = normalize_text(texto_cru)
+            
+            candidatos_texto.append(texto_busca)
+            candidatos_obj.append(item)
+            
+        if not candidatos_texto:
+            continue
 
-# --- CORREÇÃO DA FUNÇÃO DE LINK AQUI ---
+        match = process.extractOne(query_final, candidatos_texto, scorer=fuzz.token_set_ratio)
+        
+        if match:
+            score_base = match[1]
+            score_final = score_base + cat_bonus
+            
+            item_match = candidatos_obj[match[2]]
+            nome_item = normalize_text(item_match.get("nome") or item_match.get("orgao") or "")
+            if fuzz.partial_ratio(query_final, nome_item) > 90:
+                score_final += 10
+
+            if score_final > best_score:
+                best_score = score_final
+                best_item = item_match
+
+    if best_score >= 65:
+        return best_item
+
+    return None
+
 def create_search_map_link(query: str) -> str:
+    # CORREÇÃO: Link padrão do Google Maps Search
     full_query = f"{query}, Axixá, Maranhão"
     encoded_query = urllib.parse.quote(full_query)
-    # Formato correto para busca no Google Maps
     return f"https://www.google.com/maps/search/?api=1&query={encoded_query}"
-# ---------------------------------------
 
 @app.route("/")
 def index():
@@ -180,8 +181,8 @@ def index():
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.json
-    pergunta = data.get("pergunta")
-    pergunta_lower = pergunta.lower() if pergunta else ""
+    pergunta = data.get("pergunta", "")
+    pergunta_lower = pergunta.lower()
 
     if not pergunta:
         return jsonify({"erro": "Nenhuma pergunta fornecida."}), 400
@@ -192,9 +193,27 @@ def chat():
     item_data_json = None
     
     if prompt_data:
-        # 1. Verifica Quem Fez
-        criador_keywords = ["quem fez", "quem criou", "quem desenvolveu", "criador", "desenvolvedor", "quem e voce", "quem é voce", "quem é você"]
-        if any(phrase in pergunta_lower for phrase in criador_keywords):
+        texto_input = normalize_text(pergunta_lower)
+        
+        # 0. SAUDAÇÕES
+        palavras_input = texto_input.split()
+        saudacoes_keywords = ["ola", "oi", "opa", "salve", "eai", "hello"]
+        frases_saudacao = ["bom dia", "boa tarde", "boa noite", "tude bem", "tudo bom"]
+        
+        is_saudacao = any(s in palavras_input for s in saudacoes_keywords) or \
+                      any(f in texto_input for f in frases_saudacao)
+
+        if is_saudacao:
+             resposta_saudacao = (
+                 "Olá! Sou o Guia Digital de Axixá. "
+                 "Estou aqui para te ajudar a encontrar escolas, lojas, pontos turísticos, "
+                 "órgãos públicos e conhecer a história da cidade. Como posso ajudar?"
+             )
+             return jsonify({"resposta": resposta_saudacao, "mapa_link": None, "local_nome": "Saudação"})
+
+        # 1. Quem Fez
+        criador_keywords = ["quem fez", "quem criou", "quem desenvolveu", "criador", "desenvolvedor", "quem e voce"]
+        if any(phrase in texto_input for phrase in criador_keywords):
              resposta_criador = (
                  "Sou o Guia Digital - LocalizAxixá, desenvolvido por:\n\n"
                  "**Guilherme Moreira Santos**\n"
@@ -205,27 +224,25 @@ def chat():
              )
              return jsonify({"resposta": resposta_criador, "mapa_link": None, "local_nome": "Info dos Criadores"})
 
-        # 2. Verifica História
-        historia_keywords = ["história", "historia", "fundação", "fundacao", "origem", "emancipação", "emancipacao", "fundou", "criou", "economia", "cultura", "bumba"]
-        is_historia = any(word in pergunta_lower for word in historia_keywords)
-
-        if is_historia:
+        # 2. História
+        historia_keywords = ["historia", "fundacao", "origem", "emancipacao", "fundou", "criou", "economia", "cultura", "bumba"]
+        if any(word in texto_input for word in historia_keywords):
             historia_data = prompt_data.get("historia_axixa")
             if historia_data:
                 item_data_json = json.dumps(historia_data, ensure_ascii=False)
         
-        # 3. Verifica Comidas
-        elif "comida" in pergunta_lower or "prato" in pergunta_lower or "comer" in pergunta_lower:
-            if any(x in pergunta_lower for x in ["quais", "lista", "todas", "tipos"]):
+        # 3. Comidas
+        elif "comida" in pergunta_lower or "prato" in pergunta_lower:
+            if any(x in pergunta_lower for x in ["quais", "lista", "todas", "tipos", "sao"]):
                  comidas = prompt_data.get("comidas_tipicas", [])
                  if comidas:
                      item_data_json = json.dumps(comidas, ensure_ascii=False)
             else:
-                item_encontrado, _ = find_item_by_name(pergunta_lower, prompt_data)
-        
-        # 4. Busca Normal
+                item_encontrado = find_item_smart(pergunta, prompt_data)
+
+        # 4. Busca Padrão
         else:
-            item_encontrado, _ = find_item_by_name(pergunta_lower, prompt_data)
+            item_encontrado = find_item_smart(pergunta, prompt_data)
     
     if item_encontrado and not item_data_json: 
         item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
@@ -233,7 +250,8 @@ def chat():
         endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")
         
         query_mapa = local_nome
-        if endereco and normalize_text(endereco) not in ["centro", "zona rural", "belem zona rural"]:
+        ignorar_mapa = ["zona rural", "vários locais", "região", "centro"]
+        if endereco and not any(x in endereco.lower() for x in ignorar_mapa if len(endereco) < 10):
             query_mapa = f"{local_nome}, {endereco}"
         mapa_link = create_search_map_link(query_mapa)
     
