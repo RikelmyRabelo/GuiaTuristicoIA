@@ -88,13 +88,14 @@ def find_item_by_name(pergunta_lower: str, data: dict):
 
     pergunta_limpa = normalize_text(pergunta_lower)
     
+    # Stopwords
     stop_words = {
         'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
         'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
         'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localizacao', 'qual', 'quais', 'sao', 'sou',
         'gostaria', 'queria', 'saber', 'informacoes', 'info', 'axixa', 'cidade', 'municipio',
         'ola', 'oi', 'como', 'faco', 'pra', 'chegar', 'quero',
-        'tem', 'tinha', 'existe', 'ha', 'que', 'alguma', 'algum', 'uns', 'umas',
+        'tem', 'tinha', 'existe', 'ha', 'quem', 'que', 'alguma', 'algum', 'uns', 'umas',
         'loja', 'lojas', 'bairro', 'rua', 'av', 'avenida', 'povoado'
     }
     
@@ -130,7 +131,7 @@ def find_item_by_name(pergunta_lower: str, data: dict):
         category_terms = category_keywords_map.get(key, [])
         
         if any(kw in pergunta_limpa for kw in category_terms):
-            category_bonus = 50
+            category_bonus = 50 
 
         for item in data.get(key, []):
             nome = item.get("nome", "") or item.get("orgao", "")
@@ -149,7 +150,7 @@ def find_item_by_name(pergunta_lower: str, data: dict):
                 if re.search(pattern, full_text_search):
                     matched_keywords_count += 1
                     if re.search(pattern, nome_limpo):
-                        current_match_score += (len(keyword) * 3)
+                        current_match_score += (len(keyword) * 5)
                     else:
                         current_match_score += len(keyword)
             
@@ -164,10 +165,13 @@ def find_item_by_name(pergunta_lower: str, data: dict):
         
     return found_item, found_key
 
+# --- CORREÇÃO DA FUNÇÃO DE LINK AQUI ---
 def create_search_map_link(query: str) -> str:
     full_query = f"{query}, Axixá, Maranhão"
     encoded_query = urllib.parse.quote(full_query)
-    return f"http://googleusercontent.com/maps/google.com/0{encoded_query}"
+    # Formato correto para busca no Google Maps
+    return f"https://www.google.com/maps/search/?api=1&query={encoded_query}"
+# ---------------------------------------
 
 @app.route("/")
 def index():
@@ -188,6 +192,7 @@ def chat():
     item_data_json = None
     
     if prompt_data:
+        # 1. Verifica Quem Fez
         criador_keywords = ["quem fez", "quem criou", "quem desenvolveu", "criador", "desenvolvedor", "quem e voce", "quem é voce", "quem é você"]
         if any(phrase in pergunta_lower for phrase in criador_keywords):
              resposta_criador = (
@@ -200,6 +205,7 @@ def chat():
              )
              return jsonify({"resposta": resposta_criador, "mapa_link": None, "local_nome": "Info dos Criadores"})
 
+        # 2. Verifica História
         historia_keywords = ["história", "historia", "fundação", "fundacao", "origem", "emancipação", "emancipacao", "fundou", "criou", "economia", "cultura", "bumba"]
         is_historia = any(word in pergunta_lower for word in historia_keywords)
 
@@ -208,6 +214,7 @@ def chat():
             if historia_data:
                 item_data_json = json.dumps(historia_data, ensure_ascii=False)
         
+        # 3. Verifica Comidas
         elif "comida" in pergunta_lower or "prato" in pergunta_lower or "comer" in pergunta_lower:
             if any(x in pergunta_lower for x in ["quais", "lista", "todas", "tipos"]):
                  comidas = prompt_data.get("comidas_tipicas", [])
@@ -216,6 +223,7 @@ def chat():
             else:
                 item_encontrado, _ = find_item_by_name(pergunta_lower, prompt_data)
         
+        # 4. Busca Normal
         else:
             item_encontrado, _ = find_item_by_name(pergunta_lower, prompt_data)
     
