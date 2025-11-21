@@ -1,49 +1,34 @@
 ﻿{
   "system_prompt": [
     "Você é o Guia Digital - LocalizAxixá, um assistente virtual especializado na cidade de Axixá.",
-    "Seu papel é atuar como um guia turístico e intérprete cultural digital, oferecendo informações detalhadas,",
-    "confiáveis e atualizadas sobre o município. Fale sempre com sabedoria, calma e clareza, mantendo um tom",
-    "acolhedor e informativo, como um morador experiente que conhece a história e o cotidiano da cidade.",
-    "",
+    "Seu papel é atuar como um guia turístico e intérprete cultural digital.",
     "REGRAS DE COMPORTAMENTO:",
     "1. Responda sempre em português.",
-    "2. Fale de forma curta, clara e útil, com tom calmo, sábio e explicativo.",
-    "3. Quando citar locais, inclua: Nome, Endereço, Telefone (se houver), Descrição breve, Dica útil.",
-    "4. Se a informação não estiver confirmada, diga que não tem esse dado confirmado.",
-    "5. Nunca invente informações.",
-    "6. Use um tom de sabedoria local, acolhedor e respeitoso.",
-    "7. Priorize respostas factuais e seguras.",
-    "8. Sempre oferta contexto histórico ou cultural sobre o local citado.",
-    "9. Nunca emita opiniões pessoais.",
-    "10. Evite mencionar Axixá do Maranhão, use apenas 'Axixá'.",
-    "",
-    "REGRA DE DADOS FACTUAIS (IMPORTANTE):",
-    "11. Se você receber uma 'INSTRUÇÃO IMPORTANTE' com 'DADOS FACTUAIS' (em JSON), sua *única* tarefa é responder à pergunta do usuário de forma natural e amigável, e então apresentar *apenas* os dados factuais que recebeu.",
-    "12. Ao apresentar os dados, formate-os de maneira limpa: use negrito (**Tópico:**) para cada item (como **Nome:**, **Endereço:**, **Descrição:**) e use quebras de linha duplas (um espaço) entre cada tópico. **NUNCA use Markdown de cabeçalho (como #, ##, ou ###).**",
-    "",
-    "REGRA DE ALUCINAÇÃO (IMPORTANTE):",
-    "13. Se o usuário perguntar sobre um tópico geral (ex: 'onde comer', 'tem shopping?') para o qual você *não* recebeu 'DADOS FACTUAIS', você *não deve* inventar uma resposta. Em vez disso, explique de forma acolhedora que, como um guia focado em fatos, você só possui informações confirmadas sobre os pontos turísticos, lojas e prédios da cidade, e não sobre esse tópico."
+    "2. Fale de forma curta, clara e útil.",
+    "3. Quando citar locais, inclua: Nome, Endereço, Descrição breve.",
+    "4. Se a informação não estiver confirmada, diga que não tem esse dado.",
+    "11. Se você receber uma 'INSTRUÇÃO IMPORTANTE' com 'DADOS FACTUAIS', responda usando *apenas* os dados factuais."
   ],
   "historia_axixa": {
-    "origem_nome": "O nome 'Axixá' vem de uma árvore de mesmo nome, grande e com frutos avermelhados, que era comum às margens do Rio Munim.",
-    "fundacao": "A região foi colonizada por portugueses, liderados por Manoel José de Pinho. O povoado cresceu às margens esquerdas do Rio Munim.",
-    "emancipacao": "A história política de Axixá é marcada por sua relação com a cidade de Icatu. Foi elevada a vila em 17 de abril de 1917 (Lei nº 758), mas foi reanexada a Icatu em 1930. Reconquistou sua autonomia definitiva em 12 de junho de 1935 (Decreto nº 844).",
-    "cultura": "Axixá é um grande polo cultural, famoso pelo seu Bumba Meu Boi no sotaque de orquestra, sendo o 'Boi de Axixá' o seu maior representante. A cidade também celebra o Tambor de Crioula, quadrilhas e outras manifestações folclóricas.",
-    "economia": "A economia local se baseia na agricultura, com destaque para a produção de coco e mandioca, e em pequenas indústrias, como a de sabão de andiroba."
+    "origem_nome": "O nome 'Axixá' vem de uma árvore de mesmo nome, grande e com frutos avermelhados.",
+    "fundacao": "A região foi colonizada por portugueses, liderados por Manoel José de Pinho.",
+    "emancipacao": "Elevada a vila em 1917, reanexada a Icatu em 1930 e emancipada definitivamente em 12 de junho de 1935.",
+    "cultura": "Famosa pelo Bumba Meu Boi de orquestra (Boi de Axixá) e Tambor de Crioula.",
+    "economia": "Baseada na agricultura (coco, mandioca) e pequenas indústrias."
   },
   "escolas": [
     {"nome": "Unidade Integrada Major Fontoura", "localizacao": "Praça Santa Luzia, Burgos"},
     {"nome": "UI Professor Manoel Santana Baldez", "localizacao": "Perijucara", "telefone": "(98) 99609-5574"},
-    {"nome": "UI Arcelino Rodrigues Tavares", "localizacao": "Vale Quem Tem", "telefone": "(98) 98522-2729"},
-    {"nome": "UE José Ribamar Fontoura", "localizacao ": "Munim Mirim", "telefone": "(98) 99152-4244"},
+    {"nome": "UI Arcelino Rodrigues Tavares", "localizacao": "Vale Quem Tem", "telefone": "(98) 98522-2729", "descricao": "Escola"},
+    {"nome": "UE José Ribamar Fontoura", "localizacao": "Munim Mirim", "telefone": "(98) 99152-4244"},
     {"nome": "UE Axixaense", "localizacao": "Ruy Vaz / Rua São Pedro"},
     {"nome": "Centro de Ensino Estado do Acre", "descricao": "Escola estadual de Ensino Médio"},
-    {"nome": "IEMA - Unidade Plena de Axixá", "localizacao": "BR 402 - Santa Rosa", "descricao": "Ensino Médio técnico/tempo integral"},
+    {"nome": "IEMA - Unidade Plena de Axixá", "localizacao": "BR 402 - Santa Rosa", "descricao": "Escola de Ensino Médio técnico/tempo integral"},
     {"nome": "Unidade Integrada Felipe Barbosa de Andrade", "localizacao": "Av. Ivar Saldanha, Centro-Grande", "telefone": "(98) 98811-4946"},
     {"nome": "Jardim de Infância Adelino Fontoura", "descricao": "Creche / educação infantil"},
     {"nome": "Colégio Militar Tiradentes XV - Axixá", "localizacao": "R. Vinte e Três de Setembro", "descricao": "Escola municipal de ensino fundamental 1 e 2"},
     {"nome": "Jardim de Infância Felipe Barbosa de Andrade", "descricao": "educação infantil", "localizacao": "CentroGrande"},
-    {"nome": "Jardim de Infância Lilian Cortes Maciel Vieira", "localizacao": "Santa Rosa"},
+    {"nome": "Jardim de Infância Lilian Cortes Maciel Vieira", "localizacao": "Santa Rosa", "descricao": "Escola infantil"},
     {"nome": "JI Professor Maximiano Santos Lima", "localizacao": "Ruy-Vaz"},
     {"nome": "UE Dr. Saturnino Belo", "localizacao": "Monte Alegre"},
     {"nome": "UE Dr. Genesio Rego", "localizacao": "Belém (Praça Santo Antônio)"},
@@ -74,8 +59,8 @@
     {"nome": "Dany Multimarcas", "descricao": "roupas e calçados"}
   ],
   "pontos_turisticos": [
-    {"nome": "Igreja da Luz", "descricao": "patrimônio histórico, construída por volta de 1693", "localizacao": "Belém - zona rural", "acessibilidade": "acesso por estrada rural"},
-    {"nome": "Ilha de Perijuçara", "descricao": "pequenas praias com águas calmas, bom para banhos", "localizacao": "em frente ao povoado Perijuçara", "dica": "ideal em marés baixas"},
+    {"nome": "Igreja da Luz", "descricao": "patrimônio histórico e ponto turístico, construída por volta de 1693", "localizacao": "Belém - zona rural", "acessibilidade": "acesso por estrada rural"},
+    {"nome": "Ilha de Perijuçara", "descricao": "pequenas praias com águas calmas, excelente banho de rio", "localizacao": "em frente ao povoado Perijuçara", "dica": "ideal em marés baixas"},
     {"nome": "Praça e Igreja do Centro", "descricao": "Matriz - Nossa Senhora da Saúde / Santo Antônio", "localizacao": "Centro de Axixá"},
     {"nome": "Balneario Santa Vitória", "descricao": "Local para banho muito bem ambientado", "localizacao": "Vale Quem Tem"},
     {"nome": "Ruinas do Quilombo de Munim Mirim", "descricao": "Restos de contruções onde se mantinha os escravizados no passado, patrimonio historico da cidade", "localizacao": "Munim Mirim"}
@@ -99,7 +84,7 @@
     {"nome": "Igreja da Luz", "descricao": "patrimônio histórico, construída por volta de 1693", "endereco": "Belém - zona rural", "acessibilidade": "acesso por estrada rural"},
     {"nome": "Paróquia Nossa Senhora da Saúde - Igreja Católica", "tipo": "Católica (matriz)", "endereco": "Praça da Saúde, Centro"},
     {"nome": "Igreja Evangélica Assembleia de Deus", "tipo": "Evangélica", "endereco": "Rua Av. Evaristo, Centro"},
-    {"nome": "Igreja Batista de Jesus Cristo", "tipo": "Evangélica (Batista)", "endereco": "Rua Delarey Cardoso Nunes, 12 - Bairro São Benedito"},
+    {"nome": "Igreja Batista de Jesus Cristo", "tipo": "Evangélica (Batista)", "endereco": "Rua Delarey Cardoso Nunes, 12"},
     {"nome": "Igreja Vale de Bênção (IBVB)", "tipo": "Evangélica", "endereco": "Rua 13 de Maio, Centro"}
   ],
   "campos_esportivos": [
@@ -130,6 +115,12 @@
     {"nome": "Cemitério do Cedro / Santa Rosa", "localizacao": "povoado Cedro / Santa Rosa"}
   ],
   "pousadas_dormitorios": [
-    {"nome": "Recanto Azeite Doce", "descrição": "ambiente perfeito para se renovar as enegias, dormindo e se alimentando bem", "telefone": "(98) 98169-3074", "localizacao": "Centro Grande"}
+    {"nome": "Recanto Azeite Doce", "descricao": "Pousada e dormitório. Ambiente perfeito para se renovar as enegias, dormindo e se alimentando bem", "telefone": "(98) 98169-3074", "localizacao": "Centro Grande"}
+  ],
+  "comidas_tipicas": [
+    {"nome": "Juçara", "descricao": "fruta típica da região (açaí), muito consumida na forma de polpa/vinho com farinha ou camarão"},
+    {"nome": "Peixe Assado", "descricao": "prato tradicional servido em restaurantes e barracas locais"},
+    {"nome": "Pititinga", "descricao": "pequeno peixe frito crocante, petisco muito comum na região do Munim"},
+    {"nome": "Galinha Caipira", "descricao": "prato típico servido com arroz e pirão"}
   ]
 }

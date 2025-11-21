@@ -6,15 +6,24 @@ client = app.test_client()
 
 def rodar_testes():
     cenarios = [
-        ("Onde fica a escola IEMA?", "IEMA - Unidade Plena de Axixá"),
-        ("Quero saber sobre o colégio militar", "Colégio Militar Tiradentes XV - Axixá"),
-        ("Onde fica a escola Estado do Acre?", "Centro de Ensino Estado do Acre"),
-        ("Escola no povoado Munim Mirim", "UE José Ribamar Fontoura"),
-        ("Onde estudar em tempo integral?", "IEMA - Unidade Plena de Axixá"),
-        ("Escola no Vale Quem Tem", "UI Arcelino Rodrigues Tavares"),
-        ("Tem alguma creche na cidade?", "Jardim de Infância Adelino Fontoura"),
-        ("Tem alguma escola no povoado Burgos?", "Unidade Integrada Major Fontoura"),
+        ("Quem fez a IA?", "Info dos Criadores"),
 
+        ("Existe uma igreja de São Benedito?", "Resposta da IA (Sem Local)"), 
+        ("Tem alguma pousada?", "Recanto Azeite Doce"), 
+        ("Onde tomar banho de rio?", "Ilha de Perijuçara"), 
+        ("Praça da cidade", "Praça e Igreja do Centro"), 
+
+        ("Quais são as comidas típicas da cidade?", "Lista de Comidas"),
+
+        ("Escola no povoado Munim Mirim", "UE José Ribamar Fontoura"), 
+        ("Escola em Santa Rosa", ["Jardim de Infância Lilian Cortes Maciel Vieira", "IEMA - Unidade Plena de Axixá"]), 
+        ("Loja de calçados", "Axixá Multimarcas"), 
+        ("Escola no Vale Quem Tem", "UI Arcelino Rodrigues Tavares"), 
+        ("Tem alguma creche na cidade?", "Jardim de Infância Adelino Fontoura"), 
+        ("Onde compro móveis?", ["Eli Lojas", "Lunna Eletromóveis"]), 
+        ("Onde fica a Josy Boutique?", "Josy Boutique"),
+        ("Quero visitar a Igreja da Luz", "Igreja da Luz"),
+        ("Onde fica a Prefeitura?", "Prefeitura Municipal de Axixá"),
     ]
 
     print(f"\n{'STATUS':<10} | {'ESPERADO':<35} | {'PERGUNTA'}")
@@ -23,8 +32,8 @@ def rodar_testes():
     sucessos = 0
     falhas = 0
 
-    with patch('app.conversar_com_guia') as mock_ia:
-        mock_ia.return_value = "Resposta simulada da IA para teste."
+    with patch('app.conversar_com_chat') as mock_ia:
+        mock_ia.return_value = "Resposta simulada da IA."
 
         for pergunta, esperado in cenarios:
             try:
@@ -35,14 +44,22 @@ def rodar_testes():
                 passou = False
                 resultado_real = local_encontrado
 
-                if esperado == "Dados de História":
+                if esperado == "Info dos Criadores":
+                    resposta = data.get('resposta', '')
+                    passou = "Guilherme" in resposta and "Rikelmy" in resposta
+                    resultado_real = "Info dos Criadores" if passou else "Resposta incorreta"
+
+                elif esperado == "Lista de Comidas":
                     args, _ = mock_ia.call_args
-                    dados_passados = args[2] if args and len(args) > 2 else ""
-                    tem_dados = any(k in str(dados_passados) for k in ["origem_nome", "economia", "cultura"])
-                    passou = tem_dados
-                    resultado_real = "Dados de História" if passou else str(local_encontrado)
-                
-                elif expected_is_list := isinstance(esperado, list):
+                    dados = args[2] if args and len(args) > 2 else ""
+                    passou = "Juçara" in str(dados) and "Peixe Assado" in str(dados)
+                    resultado_real = "Lista completa enviada" if passou else str(local_encontrado)
+
+                elif esperado == "Resposta da IA (Sem Local)":
+                    passou = local_encontrado is None
+                    resultado_real = "Sem Local (OK)" if passou else local_encontrado
+
+                elif isinstance(esperado, list):
                     passou = local_encontrado in esperado
                 
                 else:
