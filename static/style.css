@@ -263,3 +263,58 @@ h1 i {
     color: var(--text-color);
     transition: color 0.3s;
 }
+
+.chat-container-main {
+    max-width: 800px;
+    margin: 40px auto;
+    text-align: center;
+    font-family: 'Trebuchet MS', 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.theme-toggle-wrapper {
+    margin-left: 8px;
+}
+
+.chat-box-wrapper {
+    margin: 18px auto;
+    text-align: left;
+}
+
+.input-area-form {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    align-items: center;
+}
+
+.input-field {
+    width: 70%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.btn-send {
+    padding: 10px 14px;
+    border-radius: 8px;
+}
+
+.spacer-small {
+    height: 14px;
+}
+
+.footer-copyright {
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.spacer-mini {
+    height: 8px;
+}

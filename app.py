@@ -18,6 +18,36 @@ PROMPT_FILE = os.path.join(APP_ROOT, "prompt.json")
 
 app = Flask(__name__)
 
+SEARCH_CACHE = {}
+
+CATEGORIAS_ALVO = [
+    "pontos_turisticos", "escolas", "lojas", "predios_municipais", 
+    "igrejas", "campos_esportivos", "cemiterios", "pousadas_dormitorios", 
+    "comidas_tipicas"
+]
+
+CATEGORY_KEYWORDS_MAP = {
+    "escolas": ["escola", "colegio", "creche", "estudar", "ensino", "infancia", "fundamental", "medio", "educacao", "unidade"],
+    "lojas": ["loja", "comprar", "mercado", "vende", "roupa", "moda", "moveis", "eletro", "calcados", "flor", "variedade", "material", "construcao", "floricultura", "mercadinho", "farmacia", "conveniencia", "distribuidora"],
+    "pontos_turisticos": ["turismo", "passear", "banho", "rio", "praca", "igreja", "visitar", "ruina", "lazer", "turistico", "historico", "balneario"],
+    "igrejas": ["igreja", "paroquia", "culto", "missa", "evangelica", "catolica", "assembleia", "batista"],
+    "predios_municipais": ["prefeitura", "secretaria", "cras", "camara", "orgao", "publico", "saude", "assistencia"],
+    "campos_esportivos": ["campo", "futebol", "ginasio", "jogo", "esporte", "quadra", "bola"],
+    "cemiterios": ["cemiterio", "sepultamento", "enterrar"],
+    "pousadas_dormitorios": ["pousada", "dormir", "hotel", "hospedagem", "quarto", "dormitorio"],
+    "comidas_tipicas": ["comida", "tipica", "prato", "fome", "comer", "restaurante", "gastronomia", "culinaria", "almoco", "jantar", "peixe", "jucara"]
+}
+
+STOP_WORDS = {
+    'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
+    'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
+    'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localizacao', 'qual', 'quais', 'sao', 'sou',
+    'gostaria', 'queria', 'saber', 'informacoes', 'info', 'axixa', 'cidade', 'municipio',
+    'ola', 'oi', 'como', 'faco', 'pra', 'chegar', 'quero',
+    'tem', 'tinha', 'existe', 'ha', 'que', 'alguma', 'algum', 'uns', 'umas',
+    'bairro', 'rua', 'av', 'avenida', 'povoado'
+}
+
 def load_prompt_data(file_path: str) -> dict:
     try:
         with open(file_path, 'r', encoding='utf-8-sig') as f:
@@ -27,10 +57,45 @@ def load_prompt_data(file_path: str) -> dict:
         print(f"[Erro] Ocorreu um erro ao ler o {file_path}: {e}")
         return None
 
+def normalize_text(text: str) -> str:
+    if not text: return ""
+    text = text.lower()
+    text = unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('utf-8')
+    text = re.sub(r'[^\w\s]', ' ', text)
+    return text.strip()
+
+def build_search_index(data: dict):
+    global SEARCH_CACHE
+    if not data: return
+    
+    for categoria in CATEGORIAS_ALVO:
+        items = data.get(categoria, [])
+        processed_texts = []
+        processed_objects = []
+
+        for item in items:
+            nome = item.get("nome") or item.get("orgao") or ""
+            local = item.get("localizacao") or item.get("endereco") or ""
+            desc = item.get("descricao") or item.get("descrição") or ""
+            
+            texto_cru = f"{nome} {desc} {local} {categoria}"
+            texto_busca = normalize_text(texto_cru)
+            
+            item["_nome_normalizado"] = normalize_text(nome)
+            
+            processed_texts.append(texto_busca)
+            processed_objects.append(item)
+        
+        SEARCH_CACHE[categoria] = {
+            "texts": processed_texts,
+            "objects": processed_objects
+        }
+
 prompt_data = load_prompt_data(PROMPT_FILE)
  
 if prompt_data:
     system_prompt = "\n".join(prompt_data.get("system_prompt", []))
+    build_search_index(prompt_data)
 else:
     system_prompt = None
 
@@ -71,92 +136,45 @@ def conversar_com_chat(pergunta: str, system_prompt: str, item_data_json: str = 
     except Exception as e:
         return f"[Erro inesperado: {e}]"
 
-def normalize_text(text: str) -> str:
-    """Remove acentos, caracteres especiais e converte para minúsculas."""
-    if not text: return ""
-    text = text.lower()
-    text = unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('utf-8')
-    text = re.sub(r'[^\w\s]', ' ', text)
-    return text.strip()
-
-def find_item_smart(pergunta: str, data: dict):
-    if not data or not pergunta:
+def find_item_smart(pergunta: str):
+    if not pergunta:
         return None
 
     pergunta_limpa = normalize_text(pergunta)
     
-    stop_words = {
-        'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
-        'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
-        'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localizacao', 'qual', 'quais', 'sao', 'sou',
-        'gostaria', 'queria', 'saber', 'informacoes', 'info', 'axixa', 'cidade', 'municipio',
-        'ola', 'oi', 'como', 'faco', 'pra', 'chegar', 'quero',
-        'tem', 'tinha', 'existe', 'ha', 'que', 'alguma', 'algum', 'uns', 'umas',
-        'bairro', 'rua', 'av', 'avenida', 'povoado'
-    }
-    
-    termos_importantes = [word for word in pergunta_limpa.split() if word not in stop_words and len(word) > 1]
+    termos_importantes = [word for word in pergunta_limpa.split() if word not in STOP_WORDS and len(word) > 1]
     
     if not termos_importantes:
         query_final = pergunta_limpa
     else:
         query_final = " ".join(termos_importantes)
 
-    category_keywords_map = {
-        "escolas": ["escola", "colegio", "creche", "estudar", "ensino", "infancia", "fundamental", "medio", "educacao", "unidade"],
-        "lojas": ["loja", "comprar", "mercado", "vende", "roupa", "moda", "moveis", "eletro", "calcados", "flor", "variedade", "material", "construcao", "floricultura", "mercadinho", "farmacia", "conveniencia", "distribuidora"],
-        "pontos_turisticos": ["turismo", "passear", "banho", "rio", "praca", "igreja", "visitar", "ruina", "lazer", "turistico", "historico", "balneario"],
-        "igrejas": ["igreja", "paroquia", "culto", "missa", "evangelica", "catolica", "assembleia", "batista"],
-        "predios_municipais": ["prefeitura", "secretaria", "cras", "camara", "orgao", "publico", "saude", "assistencia"],
-        "campos_esportivos": ["campo", "futebol", "ginasio", "jogo", "esporte", "quadra", "bola"],
-        "cemiterios": ["cemiterio", "sepultamento", "enterrar"],
-        "pousadas_dormitorios": ["pousada", "dormir", "hotel", "hospedagem", "quarto", "dormitorio"],
-        "comidas_tipicas": ["comida", "tipica", "prato", "fome", "comer", "restaurante", "gastronomia", "culinaria", "almoco", "jantar", "peixe", "jucara"]
-    }
-
-    categorias_alvo = [
-        "pontos_turisticos", "escolas", "lojas", "predios_municipais", 
-        "igrejas", "campos_esportivos", "cemiterios", "pousadas_dormitorios", 
-        "comidas_tipicas"
-    ]
-
     best_item = None
     best_score = 0
 
-    for categoria in categorias_alvo:
+    for categoria in CATEGORIAS_ALVO:
         cat_bonus = 0
-        keywords = category_keywords_map.get(categoria, [])
+        keywords = CATEGORY_KEYWORDS_MAP.get(categoria, [])
         if any(kw in query_final for kw in keywords):
             cat_bonus = 15
 
-        items = data.get(categoria, [])
-        
-        candidatos_texto = []
-        candidatos_obj = []
-        
-        for item in items:
-            nome = item.get("nome") or item.get("orgao") or ""
-            local = item.get("localizacao") or item.get("endereco") or ""
-            desc = item.get("descricao") or item.get("descrição") or ""
-            
-            texto_cru = f"{nome} {desc} {local} {categoria}"
-            texto_busca = normalize_text(texto_cru)
-            
-            candidatos_texto.append(texto_busca)
-            candidatos_obj.append(item)
-            
-        if not candidatos_texto:
+        cache_data = SEARCH_CACHE.get(categoria)
+        if not cache_data or not cache_data["texts"]:
             continue
-
+            
+        candidatos_texto = cache_data["texts"]
+        candidatos_obj = cache_data["objects"]
+        
         match = process.extractOne(query_final, candidatos_texto, scorer=fuzz.token_set_ratio)
         
         if match:
-            score_base = match[1]
+            texto_match, score_base, index = match
             score_final = score_base + cat_bonus
             
-            item_match = candidatos_obj[match[2]]
-            nome_item = normalize_text(item_match.get("nome") or item_match.get("orgao") or "")
-            if fuzz.partial_ratio(query_final, nome_item) > 90:
+            item_match = candidatos_obj[index]
+            nome_norm = item_match.get("_nome_normalizado", "")
+            
+            if fuzz.partial_ratio(query_final, nome_norm) > 90:
                 score_final += 10
 
             if score_final > best_score:
@@ -169,7 +187,6 @@ def find_item_smart(pergunta: str, data: dict):
     return None
 
 def create_search_map_link(query: str) -> str:
-    # CORREÇÃO: Link padrão do Google Maps Search
     full_query = f"{query}, Axixá, Maranhão"
     encoded_query = urllib.parse.quote(full_query)
     return f"https://www.google.com/maps/search/?api=1&query={encoded_query}"
@@ -195,7 +212,6 @@ def chat():
     if prompt_data:
         texto_input = normalize_text(pergunta_lower)
         
-        # 0. SAUDAÇÕES
         palavras_input = texto_input.split()
         saudacoes_keywords = ["ola", "oi", "opa", "salve", "eai", "hello"]
         frases_saudacao = ["bom dia", "boa tarde", "boa noite", "tude bem", "tudo bom"]
@@ -211,7 +227,6 @@ def chat():
              )
              return jsonify({"resposta": resposta_saudacao, "mapa_link": None, "local_nome": "Saudação"})
 
-        # 1. Quem Fez
         criador_keywords = ["quem fez", "quem criou", "quem desenvolveu", "criador", "desenvolvedor", "quem e voce"]
         if any(phrase in texto_input for phrase in criador_keywords):
              resposta_criador = (
@@ -224,25 +239,22 @@ def chat():
              )
              return jsonify({"resposta": resposta_criador, "mapa_link": None, "local_nome": "Info dos Criadores"})
 
-        # 2. História
         historia_keywords = ["historia", "fundacao", "origem", "emancipacao", "fundou", "criou", "economia", "cultura", "bumba"]
         if any(word in texto_input for word in historia_keywords):
             historia_data = prompt_data.get("historia_axixa")
             if historia_data:
                 item_data_json = json.dumps(historia_data, ensure_ascii=False)
         
-        # 3. Comidas
         elif "comida" in pergunta_lower or "prato" in pergunta_lower:
             if any(x in pergunta_lower for x in ["quais", "lista", "todas", "tipos", "sao"]):
                  comidas = prompt_data.get("comidas_tipicas", [])
                  if comidas:
                      item_data_json = json.dumps(comidas, ensure_ascii=False)
             else:
-                item_encontrado = find_item_smart(pergunta, prompt_data)
+                item_encontrado = find_item_smart(pergunta)
 
-        # 4. Busca Padrão
         else:
-            item_encontrado = find_item_smart(pergunta, prompt_data)
+            item_encontrado = find_item_smart(pergunta)
     
     if item_encontrado and not item_data_json: 
         item_data_json = json.dumps(item_encontrado, ensure_ascii=False)

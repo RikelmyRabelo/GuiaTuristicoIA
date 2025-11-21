@@ -1,45 +1,42 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/static/favicon.webp" type="image/x-icon">
     <title>Guia Digital - LocalizAxixá</title>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body class="light-mode">
 
-    <div id="chat-container" style="max-width:800px; margin:40px auto; text-align:center; font-family:'Trebuchet MS','Segoe UI',Roboto,Arial,sans-serif;">
-        <h1 style="display:flex; align-items:center; justify-content:center; gap:12px;">
+    <div id="chat-container" class="chat-container-main">
+        <h1 class="header-title">
             <span>
                 <i class="fas fa-map-marked-alt"></i> Guia Digital - LocalizAxixá
             </span>
-            <div class="theme-toggle" onclick="toggleTheme()" style="margin-left:8px;">
+            <div class="theme-toggle theme-toggle-wrapper" onclick="toggleTheme()">
                 <i id="theme-icon" class="fas fa-moon"></i>
             </div>
         </h1>
 
-        <div id="chat-box" style="margin:18px auto; text-align:left;">
+        <div id="chat-box" class="chat-box-wrapper">
             <div class="message LocalizAxixá">
                 Olá! Sou o guia digital de Axixá. Pergunte-me sobre pontos turísticos, lojas, escolas, igrejas ou a história da cidade. Como posso ajudar?
             </div>
         </div>
 
-        <form id="input-area" style="display:flex; justify-content:center; gap:8px; align-items:center;">
-            <input type="text" id="user-input" placeholder="Pergunte algo..." autocomplete="off" style="width:70%; padding:10px 12px; border-radius:8px; border:1px solid #ccc;">
-            <button type="submit" id="send-button" disabled style="padding:10px 14px; border-radius:8px;">➤</button>
+        <form id="input-area" class="input-area-form">
+            <input type="text" id="user-input" class="input-field" placeholder="Pergunte algo..." autocomplete="off">
+            <button type="submit" id="send-button" class="btn-send" disabled>➤</button>
         </form>
 
-        <div style="height:14px;"></div>
+        <div class="spacer-small"></div>
 
-        <div class="copyright" style="text-align:center; font-size:0.9rem;">
+        <div class="copyright footer-copyright">
             © 2025 - Grupo de Análise e Desenvolvimento de Sistemas. Todos os direitos reservados.
-            <div style="height:8px;"></div>
+            <div class="spacer-mini"></div>
             <span>Guilherme Moreira Santos, José Ribamar Andrade Santos Júnior, Marina de Jesus Lima Muniz e Rikelmy Rabelo Freitas.</span>
         </div>
     </div>
@@ -50,12 +47,10 @@
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
 
-        // Habilita/Desabilita o botão baseado no input
         userInput.addEventListener('input', () => {
             sendButton.disabled = userInput.value.trim() === "";
         });
 
-        // Funções de Carregamento
         let loadingElement = null;
 
         function showLoading() {
@@ -68,7 +63,6 @@
                 dot.classList.add('dot');
                 loadingElement.appendChild(dot);
             }
-
             chatBox.appendChild(loadingElement);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -80,44 +74,33 @@
             }
         }
 
-        // Função principal de Chat
         inputArea.addEventListener('submit', async function (event) {
             event.preventDefault();
-
             const pergunta = userInput.value.trim();
             if (pergunta === "") return;
 
             addMessage(pergunta, 'user');
-
             userInput.value = '';
             sendButton.disabled = true;
             userInput.disabled = true;
-
             showLoading();
 
             try {
                 const response = await fetch('/chat', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ pergunta: pergunta })
                 });
 
-                if (!response.ok) {
-                    throw new Error('Erro ao contatar o servidor.');
-                }
-
+                if (!response.ok) throw new Error('Erro ao contatar o servidor.');
                 const data = await response.json();
-
+                
                 removeLoading();
-
                 addMessage(data.resposta, 'guia');
 
                 if (data.mapa_link && data.local_nome) {
                     addMapLink(data.mapa_link, data.local_nome);
                 }
-
             } catch (error) {
                 removeLoading();
                 console.error("Erro:", error);
@@ -132,13 +115,9 @@
         function addMessage(text, sender) {
             const messageElement = document.createElement('div');
             messageElement.classList.add('message', sender);
-
             let formattedText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-            formattedText = formattedText.replace(/\n/g, '<br>');
-
+            formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
             messageElement.innerHTML = formattedText;
-
             chatBox.appendChild(messageElement);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -146,16 +125,13 @@
         function addMapLink(url, localNome) {
             const linkContainer = document.createElement('div');
             linkContainer.classList.add('map-link-container');
-
             const mapLink = document.createElement('a');
             mapLink.classList.add('map-link');
             mapLink.href = url;
             mapLink.textContent = `🗺️ Ver "${localNome}" no mapa`;
             mapLink.target = '_blank';
             mapLink.rel = 'noopener noreferrer';
-
             linkContainer.appendChild(mapLink);
-
             chatBox.appendChild(linkContainer);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -163,7 +139,6 @@
         function toggleTheme() {
             const body = document.body;
             const icon = document.getElementById('theme-icon');
-
             if (body.classList.contains('dark-mode')) {
                 body.classList.remove('dark-mode');
                 localStorage.setItem('theme', 'light');
@@ -187,5 +162,4 @@
         });
     </script>
 </body>
-
 </html>

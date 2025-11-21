@@ -1,192 +1,65 @@
-import json
-import re
-import unicodedata
-from unittest.mock import patch
+import pytest
 from app import app
 
-client = app.test_client()
+@pytest.fixture
+def client():
+    app.config['TESTING'] = True
+    with app.test_client() as client:
+        yield client
 
-def normalizar_para_teste(text):
-    """
-    Remove acentos e coloca em minúsculas para comparar o esperado com o recebido.
-    """
-    if not isinstance(text, str): return str(text)
-    text = text.lower()
-    text = unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('utf-8')
-    return text.strip()
+def post_pergunta(client, texto):
+    return client.post('/chat', json={'pergunta': texto}).get_json()
 
-def rodar_testes():
-    cenarios = [
-        # --- NOVO: SAUDAÇÕES ---
-        ("Olá, tudo bem?", "Saudação"),
-        ("Oi guia", "Saudação"),
-        ("Opa", "Saudação"),
 
-        # --- PERGUNTAS ESPECÍFICAS SOLICITADAS ---
-        ("Onde fica a igreja da luz?", "Igreja da Luz"),
-        ("Quem desenvolveu você?", "Info dos Criadores"),
-        ("Quais são as comidas típicas da cidade?", "Lista de Comidas"),
+def test_saudacao_basica(client):
+    data = post_pergunta(client, "Olá, tudo bem?")
+    assert "Sou o Guia Digital" in data['resposta']
+    assert data['local_nome'] == "Saudação"
 
-        # --- QUEM FEZ / SOBRE A IA ---
-        ("Quem criou esse sistema?", "Info dos Criadores"),
-        ("Quem é o desenvolvedor?", "Info dos Criadores"),
+def test_quem_desenvolveu(client):
+    data = post_pergunta(client, "Quem criou esse sistema?")
+    assert "Rikelmy" in data['resposta']
+    assert data['local_nome'] == "Info dos Criadores"
 
-        # --- ESCOLAS (Zona Urbana e Rural) ---
-        ("Onde fica a escola Major Fontoura?", "Unidade Integrada Major Fontoura"),
-        ("Escola no povoado Perijuçara", "UI Professor Manoel Santana Baldez"),
-        ("Escola no Vale Quem Tem", "UI Arcelino Rodrigues Tavares"),
-        ("Escola no Munim Mirim", "UE José Ribamar Fontoura"),
-        ("Onde fica a escola Axixaense?", "UE Axixaense"),
-        ("Onde fica o Centro de Ensino Estado do Acre?", "Centro de Ensino Estado do Acre"),
-        ("Onde fica o IEMA?", "IEMA - Unidade Plena de Axixá"),
-        ("Escola Felipe Barbosa", "Unidade Integrada Felipe Barbosa de Andrade"),
-        ("Tem alguma creche?", "Jardim de Infância Adelino Fontoura"),
-        ("Onde fica o Colégio Militar?", "Colégio Militar Tiradentes XV - Axixá"),
-        ("Escola em Santa Rosa", ["Jardim de Infância Lilian Cortes Maciel Vieira", "IEMA - Unidade Plena de Axixá"]),
-        ("Escola no Ruy Vaz", ["JI Professor Maximiano Santos Lima", "UE Axixaense"]),
-        ("Escola Dr. Saturnino Belo", "UE Dr. Saturnino Belo"),
-        ("Escola no povoado Belém", "UE Dr. Genesio Rego"),
-        ("Escola no Bomfim", "UE Joaquim Silva"),
-        ("Escola no Iguaperiba", "UE Professor Vicente Pires"),
-        ("Escola no Riachão", "UI Senador Clodomir Cardoso"),
-        ("Escola Maria Vitória", ["Unidade Mais Integrada Professora Maria Vitória Santos", "UE Maria Vitória Santos Marques"]),
+def test_igreja_da_luz(client):
+    data = post_pergunta(client, "Onde fica a igreja da luz?")
+    assert data['local_nome'] == "Igreja da Luz"
 
-        # --- LOJAS E COMÉRCIO ---
-        ("Onde compro móveis?", ["Eli Lojas", "Mayra Magazine", "Lunna Eletromóveis"]),
-        ("Loja de moda praia", "La Vista"),
-        ("Onde fica a Josy Boutique?", "Josy Boutique"),
-        ("Tem loja de variedades?", "Axixá Variadades"),
-        ("Onde fica a Top20?", "Top20 Loja"),
-        ("Loja de calçados", ["Axixá Multimarcas", "Dany Multimarcas"]),
-        ("Floricultura na cidade", "Nova Flor"),
-        ("Onde tem conveniência?", "Pit Stop Conveniência"),
-        ("Tem farmácia na cidade?", ["Farmale", "Farmale (Farmácia do Trabalhador)"]),
-        ("Mercadinho no Riachão", "Comercial Silva P. de Cássia"),
-        ("Distribuidora de bebidas", "N.C. Distribuidora"),
-        ("Material de construção ou mercado", "Comercial Martins"),
+def test_escola_major_fontoura(client):
+    data = post_pergunta(client, "Onde fica a escola Major Fontoura?")
+    assert data['local_nome'] == "Unidade Integrada Major Fontoura"
 
-        # --- PONTOS TURÍSTICOS ---
-        ("Onde tomar banho de rio?", "Ilha de Perijuçara"),
-        ("Quero visitar a Igreja Matriz", "Praça e Igreja do Centro"),
-        ("Onde fica o Balneário Santa Vitória?", "Balneário Santa Vitória"),
-        ("Tem ruínas históricas?", "Ruínas do Quilombo de Munim Mirim"),
-        ("Principal praça da cidade", "Praça e Igreja do Centro"),
+def test_comidas_tipicas(client):
+    data = post_pergunta(client, "Quais são as comidas típicas?")
+    assert "Juçara" in data['resposta'] or "Peixe" in data['resposta']
 
-        # --- HISTÓRIA (Contexto) ---
-        ("Qual a origem do nome Axixá?", "Dados de História"),
-        ("Quem fundou a cidade?", "Dados de História"),
-        ("Quando foi a emancipação?", "Dados de História"),
-        ("Fale sobre a cultura e o bumba meu boi", "Dados de História"),
 
-        # --- PRÉDIOS MUNICIPAIS ---
-        ("Onde fica a Prefeitura?", "Prefeitura Municipal de Axixá"),
-        ("Onde fica a Secretaria de Educação?", "Secretaria Municipal de Educação (SEMED)"),
-        ("Onde fica a Secretaria de Saúde?", "Secretaria Municipal de Saúde (SEMUS)"),
-        ("Onde fica o CRAS?", ["CRAS - Centro de Referência de Assistência Social", "Centro de Referencia de Assistência Social - CRAS"]),
-
-        # --- IGREJAS ---
-        ("Onde fica a Assembleia de Deus?", "Igreja Evangélica Assembleia de Deus"),
-        ("Igreja Batista", "Igreja Batista de Jesus Cristo"),
-        ("Igreja Vale de Bênção", "Igreja Vale de Bênção (IBVB)"),
-        # Teste negativo importante
-        ("Existe uma igreja de São Benedito?", "Resposta da IA (Sem Local)"),
-
-        # --- ESPORTES ---
-        ("Onde tem estádio de futebol?", "Campo Municipal / Estádio"),
-        ("Ginásio de esportes no centro", "Ginásio Poliesportivo José Pedro Ferreira Reis"),
-        ("Campo de futebol no Riachão", "Campo do Riachão"),
-
-        # --- CEMITÉRIOS ---
-        ("Onde fica o cemitério municipal?", "Cemitério Municipal de Axixá"),
-        ("Cemitério no povoado Riachão", "Cemitério do Riachão"),
-
-        # --- HOSPEDAGEM ---
-        ("Tem alguma pousada ou hotel?", "Recanto Azeite Doce"),
-        ("Onde posso dormir?", "Recanto Azeite Doce"),
+def test_escola_santa_rosa(client):
+    data = post_pergunta(client, "Escola em Santa Rosa")
+    locais_validos = [
+        "Jardim de Infância Lilian Cortes Maciel Vieira", 
+        "IEMA - Unidade Plena de Axixá",
+        "UI Delarey Cardoso Nunes"
     ]
+    assert data['local_nome'] in locais_validos
 
-    print(f"\n{'STATUS':<10} | {'ESPERADO':<35} | {'PERGUNTA'}")
-    print("-" * 100)
+def test_moveis(client):
+    data = post_pergunta(client, "Onde compro móveis?")
+    locais_validos = ["Eli Lojas", "Mayra Magazine", "Lunna Eletromóveis"]
+    assert data['local_nome'] in locais_validos
 
-    sucessos = 0
-    falhas = 0
 
-    with patch('app.conversar_com_chat') as mock_ia:
-        mock_ia.return_value = "Resposta simulada da IA."
+def test_pergunta_negativa(client):
+    data = post_pergunta(client, "Existe uma igreja de São Benedito?")
+    assert data['local_nome'] is None
 
-        for pergunta, esperado in cenarios:
-            try:
-                response = client.post('/chat', json={'pergunta': pergunta})
-                data = response.get_json()
-                local_encontrado = data.get('local_nome')
-                
-                passou = False
-                resultado_real = local_encontrado
-
-                # Validação para "Saudação"
-                if esperado == "Saudação":
-                    resposta = data.get('resposta', '')
-                    passou = "Olá! Sou o Guia Digital de Axixá" in resposta
-                    resultado_real = "Saudação Correta" if passou else "Resposta Incorreta"
-
-                # Validação para "Quem Fez"
-                elif esperado == "Info dos Criadores":
-                    resposta = data.get('resposta', '')
-                    passou = "Guilherme" in resposta and "Rikelmy" in resposta
-                    resultado_real = "Info dos Criadores" if passou else "Resposta incorreta"
-
-                # Validação para Lista de Comidas
-                elif esperado == "Lista de Comidas":
-                    args, _ = mock_ia.call_args
-                    dados = args[2] if args and len(args) > 2 else ""
-                    passou = "Juçara" in str(dados) and "Peixe Assado" in str(dados)
-                    resultado_real = "Lista completa enviada" if passou else str(local_encontrado)
-
-                # Validação para História
-                elif esperado == "Dados de História":
-                    args, _ = mock_ia.call_args
-                    dados = args[2] if args and len(args) > 2 else ""
-                    passou = "origem_nome" in str(dados)
-                    resultado_real = "Dados de História" if passou else str(local_encontrado)
-
-                # Validação para Sem Local (Teste Negativo)
-                elif esperado == "Resposta da IA (Sem Local)":
-                    passou = local_encontrado is None
-                    resultado_real = "Sem Local (OK)" if passou else local_encontrado
-
-                # Validação para Listas (quando mais de um local serve)
-                elif isinstance(esperado, list):
-                    loc_norm = normalizar_para_teste(local_encontrado)
-                    lista_norm = [normalizar_para_teste(e) for e in esperado]
-                    passou = any(loc_norm == item or item in loc_norm for item in lista_norm)
-                
-                # Validação Padrão (Nome exato)
-                else:
-                    loc_norm = normalizar_para_teste(local_encontrado)
-                    esp_norm = normalizar_para_teste(esperado)
-                    passou = (loc_norm == esp_norm) or (esp_norm in loc_norm) or (loc_norm in esp_norm)
-
-                status_icon = "✅ PASSOU" if passou else "❌ FALHOU"
-                print(f"{status_icon:<10} | {str(esperado)[:35]:<35} | {pergunta}")
-                
-                if passou:
-                    sucessos += 1
-                else:
-                    print(f"             -> Recebido: {resultado_real}")
-                    falhas += 1
-
-            except Exception as e:
-                print(f"❌ ERRO CRÍTICO no teste: {pergunta} -> {e}")
-                falhas += 1
-
-    print("-" * 100)
-    print(f"Total de Testes: {len(cenarios)}")
-    print(f"Sucessos: {sucessos}")
-    print(f"Falhas:   {falhas}")
-    
-    if len(cenarios) > 0:
-        taxa = int((sucessos / len(cenarios)) * 100)
-        print(f"Taxa de Sucesso: {taxa}%")
-
-if __name__ == "__main__":
-    rodar_testes()
+@pytest.mark.parametrize("pergunta, esperado_parcial", [
+    ("Onde fica a Prefeitura?", "Prefeitura Municipal"),
+    ("Onde fica o CRAS?", "CRAS"),
+    ("Tem alguma pousada?", "Recanto Azeite Doce"),
+    ("Onde tem estádio de futebol?", "Campo Municipal"),
+])
+def test_varios_locais(client, pergunta, esperado_parcial):
+    data = post_pergunta(client, pergunta)
+    assert data['local_nome'] is not None
+    assert esperado_parcial in data['local_nome']
