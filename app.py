@@ -2,6 +2,7 @@ import requests
 import os
 import json
 import datetime
+import threading  
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, render_template
 import urllib.parse
@@ -9,6 +10,7 @@ import re
 import unicodedata
 from rapidfuzz import process, fuzz, utils
 from supabase import create_client, Client
+from constants import CATEGORIAS_ALVO, CATEGORY_KEYWORDS_MAP, STOP_WORDS
 
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -19,11 +21,15 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 def log_interaction(pergunta, resposta, local_encontrado):
+    """
+    Esta função agora rodará em uma thread separada, 
+    não bloqueando a resposta do usuário.
+    """
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    print(f"\n---  LOG [{timestamp}] ---")
-    print(f" User: {pergunta}")
-    print(f" Local: {local_encontrado}")
+    print(f"\n--- LOG ASSÍNCRONO [{timestamp}] ---")
+    print(f"User: {pergunta}")
+    print(f"Local: {local_encontrado}")
 
     if SUPABASE_URL and SUPABASE_KEY:
         try:
@@ -36,12 +42,12 @@ def log_interaction(pergunta, resposta, local_encontrado):
             }
             
             supabase.table("logs").insert(data).execute()
-            print("✅ Salvo no Supabase!")
+            print("✅ Salvo no Supabase (Background)!")
             
         except Exception as e:
-            print(f"❌ Erro Supabase: {e}")
+            print(f"Erro Supabase: {e}")
     else:
-        print("⚠️ Supabase não configurado (variáveis de ambiente ausentes).")
+        print("Supabase não configurado.")
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 PROMPT_FILE = os.path.join(APP_ROOT, "prompt.json")
@@ -49,34 +55,6 @@ PROMPT_FILE = os.path.join(APP_ROOT, "prompt.json")
 app = Flask(__name__)
 
 SEARCH_CACHE = {}
-
-CATEGORIAS_ALVO = [
-    "pontos_turisticos", "escolas", "lojas", "predios_municipais", 
-    "igrejas", "campos_esportivos", "cemiterios", "pousadas_dormitorios", 
-    "comidas_tipicas"
-]
-
-CATEGORY_KEYWORDS_MAP = {
-    "escolas": ["escola", "colegio", "creche", "estudar", "ensino", "infancia", "fundamental", "medio", "educacao", "unidade"],
-    "lojas": ["loja", "comprar", "mercado", "vende", "roupa", "moda", "moveis", "eletro", "calcados", "flor", "variedade", "material", "construcao", "floricultura", "mercadinho", "farmacia", "conveniencia", "distribuidora"],
-    "pontos_turisticos": ["turismo", "passear", "banho", "rio", "praca", "igreja", "visitar", "ruina", "lazer", "turistico", "historico", "balneario"],
-    "igrejas": ["igreja", "paroquia", "culto", "missa", "evangelica", "catolica", "assembleia", "batista"],
-    "predios_municipais": ["prefeitura", "secretaria", "cras", "camara", "orgao", "publico", "saude", "assistencia"],
-    "campos_esportivos": ["campo", "futebol", "ginasio", "jogo", "esporte", "quadra", "bola"],
-    "cemiterios": ["cemiterio", "sepultamento", "enterrar"],
-    "pousadas_dormitorios": ["pousada", "dormir", "hotel", "hospedagem", "quarto", "dormitorio"],
-    "comidas_tipicas": ["comida", "tipica", "prato", "fome", "comer", "restaurante", "gastronomia", "culinaria", "almoco", "jantar", "peixe", "jucara"]
-}
-
-STOP_WORDS = {
-    'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
-    'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
-    'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localizacao', 'qual', 'quais', 'sao', 'sou',
-    'gostaria', 'queria', 'saber', 'informacoes', 'info', 'axixa', 'cidade', 'municipio',
-    'ola', 'oi', 'como', 'faco', 'pra', 'chegar', 'quero',
-    'tem', 'tinha', 'existe', 'ha', 'que', 'alguma', 'algum', 'uns', 'umas',
-    'bairro', 'rua', 'av', 'avenida', 'povoado'
-}
 
 def load_prompt_data(file_path: str) -> dict:
     try:
@@ -259,7 +237,7 @@ def chat():
                  "Estou aqui para te ajudar a encontrar escolas, lojas, pontos turísticos, "
                  "órgãos públicos e conhecer a história da cidade. Como posso ajudar?"
              )
-             log_interaction(pergunta, resposta_saudacao, "Saudação")
+             threading.Thread(target=log_interaction, args=(pergunta, resposta_saudacao, "Saudação")).start()
              return jsonify({"resposta": resposta_saudacao, "mapa_link": None, "local_nome": "Saudação"})
 
         criador_keywords = ["quem fez", "quem criou", "quem desenvolveu", "criador", "desenvolvedor", "quem e voce"]
@@ -272,7 +250,7 @@ def chat():
                  "**Rikelmy Rabelo Freitas**\n\n"
                  "Estou aqui para ajudar com informações sobre a cidade!"
              )
-             log_interaction(pergunta, resposta_criador, "Info dos Criadores")
+             threading.Thread(target=log_interaction, args=(pergunta, resposta_criador, "Info dos Criadores")).start()
              return jsonify({"resposta": resposta_criador, "mapa_link": None, "local_nome": "Info dos Criadores"})
 
         historia_keywords = ["historia", "fundacao", "origem", "emancipacao", "fundou", "criou", "economia", "cultura", "bumba"]
@@ -310,7 +288,7 @@ def chat():
     
     resposta_ia = conversar_com_chat(pergunta, system_prompt, item_data_json, historico)
 
-    log_interaction(pergunta, resposta_ia, local_nome)
+    threading.Thread(target=log_interaction, args=(pergunta, resposta_ia, local_nome)).start()
 
     return jsonify({"resposta": resposta_ia, "mapa_link": mapa_link, "local_nome": local_nome})
 
