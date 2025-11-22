@@ -19,9 +19,18 @@ CATEGORY_KEYWORDS_MAP = {
 STOP_WORDS = {
     'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
     'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
-    'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localizacao', 'qual', 'quais', 'sao', 'sou',
-    'gostaria', 'queria', 'saber', 'informacoes', 'info', 'axixa', 'cidade', 'municipio',
-    'ola', 'oi', 'como', 'faco', 'pra', 'chegar', 'quero',
-    'tem', 'tinha', 'existe', 'ha', 'que', 'alguma', 'algum', 'uns', 'umas',
-    'bairro', 'rua', 'av', 'avenida', 'povoado'
+    'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localizacao', 'qual', 
+    'quais', 'sao', 'sou', 'gostaria', 'queria', 'saber', 'informacoes', 'info', 
+    'axixa', 'cidade', 'municipio', 'ola', 'oi', 'como', 'faco', 'pra', 'chegar', 
+    'quero', 'tem', 'tinha', 'existe', 'existem', 'ha', 'que', 'alguma', 'algum', 
+    'uns', 'umas', 'bairro', 'rua', 'av', 'avenida', 'povoado',
+    'tomar', 'fazer', 'encontrar', 'posso', 'pode', 'endereco'
 }
+
+SAUDACOES_WORDS = {"ola", "oi", "opa", "salve", "eai"}
+SAUDACOES_PHRASES = ["bom dia", "boa tarde", "boa noite", "tudo bem", "tude bem", "como vai"]
+
+IDENTITY_KEYWORDS = [
+    "quem fez", "quem criou", "quem desenvolveu", "criador", "desenvolvedor", 
+    "quem e voce", "quem sao", "sobre o projeto", "quem sou eu"
+]

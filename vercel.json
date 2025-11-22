@@ -5,7 +5,7 @@
       "use": "@vercel/python",
       "config": {
         "includeFiles": [
-          "prompt.json",
+          "data/prompt.json",  
           "templates/index.html"
         ]
       }
