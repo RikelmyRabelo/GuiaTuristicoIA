@@ -93,13 +93,19 @@ def chat():
 
     if item_encontrado and not item_data_json:
         item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
-        local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
-        endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")
         
-        if endereco and len(endereco) > 5 and "rural" not in endereco.lower():
-            mapa_link = create_search_map_link(f"{local_nome}, {endereco}")
+        # CORREÇÃO: Verifica se é uma categoria geral
+        if item_encontrado.get("is_general"):
+            local_nome = f"Geral: {item_encontrado.get('category')}"
+            mapa_link = None # ou link genérico se preferir
         else:
-            mapa_link = create_search_map_link(local_nome)
+            local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
+            endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")
+            
+            if endereco and len(endereco) > 5 and "rural" not in endereco.lower():
+                mapa_link = create_search_map_link(f"{local_nome}, {endereco}")
+            else:
+                mapa_link = create_search_map_link(local_nome)
 
     try:
         resposta_ia = conversar_com_chat(pergunta, system_prompt, item_data_json, historico)

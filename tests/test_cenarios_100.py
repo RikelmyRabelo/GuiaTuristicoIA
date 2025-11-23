@@ -2,13 +2,17 @@ import sys
 import os
 import pytest
 from unittest.mock import patch
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from app import app
+from app import app, limiter
 
 @pytest.fixture
 def client():
     app.config['TESTING'] = True
+    app.config['RATELIMIT_ENABLED'] = False
+    limiter.enabled = False
+    
     with patch('app.conversar_com_chat') as mock_chat:
         def side_effect(pergunta, system, item_data, hist):
             if item_data and "povoados" in str(item_data):
@@ -18,9 +22,20 @@ def client():
         
         with app.test_client() as client:
             yield client
+    
+    limiter.enabled = True
 
 def post_pergunta(client, texto):
-    return client.post('/chat', json={'pergunta': texto}).get_json()
+    response = client.post('/chat', json={'pergunta': texto})
+    if response.status_code == 429:
+        pytest.fail("Erro 429: Rate Limit ainda está ativo! O teste foi bloqueado.")
+    
+    data = response.get_json()
+    if data is None:
+        pytest.fail(f"Erro: API não retornou JSON. Status: {response.status_code}")
+        
+    return data
+
 CENARIOS = [
     ("Olá", "Saudação"),
     ("Oi, tudo bem?", "Saudação"),
@@ -128,8 +143,10 @@ def test_100_cenarios(client, pergunta, esperado):
         assert response.status_code == 400
         assert response.get_json() == esperado
         return
+    
     data = post_pergunta(client, pergunta)
     local_nome = str(data.get('local_nome'))
+    
     if esperado is None:
         if "Hogwarts" in pergunta: 
              assert local_nome == "None" or "Geral" in local_nome
