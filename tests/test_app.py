@@ -61,7 +61,6 @@ def test_busca_escolas(client, pergunta, esperado):
 def test_busca_lojas(client, pergunta, esperado_parcial):
     data = post_pergunta(client, pergunta)
     encontrado = str(data['local_nome'])
-    # Aceita se encontrar a loja específica OU se cair na busca geral (lojas)
     assert any(e in encontrado for e in esperado_parcial) or "Geral" in encontrado
 
 @pytest.mark.parametrize("pergunta, esperado", [
@@ -118,8 +117,6 @@ def expected_match(data, esperado):
     return esperado in local or esperado in resp
 
 def test_negativos(client):
-    # Agora aceitamos "Geral: escolas" como resposta válida para Hogwarts
-    # pois o sistema sugere escolas reais em vez de dizer "não sei".
     data = post_pergunta(client, "Onde fica a Escola de Hogwarts?")
     assert data['local_nome'] is None or "Geral" in data['local_nome']
 

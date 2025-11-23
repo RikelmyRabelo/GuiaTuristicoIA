@@ -7,7 +7,7 @@ CATEGORIAS_ALVO = [
 CATEGORY_KEYWORDS_MAP = {
     "escolas": ["escola", "colegio", "creche", "estudar", "ensino", "infancia", "fundamental", "medio", "educacao", "unidade"],
     "lojas": ["loja", "comprar", "mercado", "vende", "roupa", "moda", "moveis", "eletro", "calcados", "flor", "variedade", "material", "construcao", "floricultura", "mercadinho", "farmacia", "conveniencia", "distribuidora"],
-    "pontos_turisticos": ["turismo", "passear", "banho", "rio", "praca", "igreja", "visitar", "ruina", "lazer", "turistico", "historico", "balneario"],
+    "pontos_turisticos": ["turismo", "passear", "banho", "rio", "praca", "igreja", "visitar", "ruina", "lazer", "turistico", "historico", "balneario", "praia"],
     "igrejas": ["igreja", "paroquia", "culto", "missa", "evangelica", "catolica", "assembleia", "batista"],
     "predios_municipais": ["prefeitura", "secretaria", "cras", "camara", "orgao", "publico", "saude", "assistencia"],
     "campos_esportivos": ["campo", "futebol", "ginasio", "jogo", "esporte", "quadra", "bola"],
@@ -18,7 +18,7 @@ CATEGORY_KEYWORDS_MAP = {
 
 STOP_WORDS = {
     'a', 'o', 'e', 'ou', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 
-    'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 
+    'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 'as', 'os',
     'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localizacao', 'qual', 
     'quais', 'sao', 'sou', 'gostaria', 'queria', 'saber', 'informacoes', 'info', 
     'axixa', 'cidade', 'municipio', 'ola', 'oi', 'como', 'faco', 'pra', 'chegar', 
