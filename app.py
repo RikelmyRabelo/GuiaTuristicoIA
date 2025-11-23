@@ -47,10 +47,12 @@ def chat():
         resp = "Olá! Sou o Guia Digital de Axixá. Posso ajudar com escolas, lojas, turismo e história da cidade."
         threading.Thread(target=log_interaction, args=(pergunta, resp, "Saudação")).start()
         return jsonify({"resposta": resp, "mapa_link": None, "local_nome": "Saudação"})
+    
     if any(k in texto_input for k in IDENTITY_KEYWORDS):
         resp = "Desenvolvido por: Guilherme Moreira, José Ribamar, Marina de Jesus e Rikelmy Rabelo."
         threading.Thread(target=log_interaction, args=(pergunta, resp, "Créditos")).start()
         return jsonify({"resposta": resp, "mapa_link": None, "local_nome": "Créditos"})
+    
     item_encontrado = None
     item_data_json = None
     local_nome = None
@@ -66,14 +68,24 @@ def chat():
         item_encontrado = find_item_smart(pergunta)
 
     if item_encontrado and not item_data_json:
-        item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
-        local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
-        endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")
-        
-        if endereco and len(endereco) > 5 and "rural" not in endereco.lower():
-            mapa_link = create_search_map_link(f"{local_nome}, {endereco}")
+        if item_encontrado.get("is_general"):
+            local_nome = f"Geral: {item_encontrado['category']}"
+            itens_lista = json.dumps(item_encontrado["items"], ensure_ascii=False)
+            item_data_json = (
+                f"SITUAÇÃO: O usuário perguntou de forma genérica sobre '{item_encontrado['category']}'. "
+                f"RESPOSTA OBRIGATÓRIA: Explique que a cidade é cheia de povoados e pergunte se ele procura "
+                f"em algum povoado específico. Em seguida, liste estes exemplos variados: {itens_lista}"
+            )
+            mapa_link = None 
         else:
-            mapa_link = create_search_map_link(local_nome)
+            item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
+            local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
+            endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")
+            
+            if endereco and len(endereco) > 5 and "rural" not in endereco.lower():
+                mapa_link = create_search_map_link(f"{local_nome}, {endereco}")
+            else:
+                mapa_link = create_search_map_link(local_nome)
 
     resposta_ia = conversar_com_chat(pergunta, system_prompt, item_data_json, historico)
     

@@ -24,7 +24,8 @@ STOP_WORDS = {
     'axixa', 'cidade', 'municipio', 'ola', 'oi', 'como', 'faco', 'pra', 'chegar', 
     'quero', 'tem', 'tinha', 'existe', 'existem', 'ha', 'que', 'alguma', 'algum', 
     'uns', 'umas', 'bairro', 'rua', 'av', 'avenida', 'povoado',
-    'tomar', 'fazer', 'encontrar', 'posso', 'pode', 'endereco'
+    'tomar', 'fazer', 'encontrar', 'posso', 'pode', 'endereco', 
+    'ver', 'comprar', 'vende'
 }
 
 SAUDACOES_WORDS = {"ola", "oi", "opa", "salve", "eai"}
@@ -32,5 +33,5 @@ SAUDACOES_PHRASES = ["bom dia", "boa tarde", "boa noite", "tudo bem", "tude bem"
 
 IDENTITY_KEYWORDS = [
     "quem fez", "quem criou", "quem desenvolveu", "criador", "desenvolvedor", 
-    "quem e voce", "quem sao", "sobre o projeto", "quem sou eu"
+    "quem e voce", "quem saoz", "sobre o projeto", "quem sou eu"
 ]
