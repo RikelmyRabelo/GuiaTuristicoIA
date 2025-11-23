@@ -7,6 +7,7 @@
     <title>Guia Digital - LocalizAxixá</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body class="light-mode">
@@ -55,6 +56,7 @@
         });
 
         let loadingElement = null;
+        let lastQuestion = "";
 
         function showLoading() {
             loadingElement = document.createElement('div');
@@ -82,6 +84,7 @@
             const pergunta = userInput.value.trim();
             if (pergunta === "") return;
 
+            lastQuestion = pergunta; // Salva para reuso
             addMessage(pergunta, 'user');
             userInput.value = '';
             sendButton.disabled = true;
@@ -92,30 +95,40 @@
                 const response = await fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // Envia a pergunta e o histórico atual
                     body: JSON.stringify({ 
                         pergunta: pergunta,
                         historico: chatHistory
                     })
                 });
 
-                if (!response.ok) throw new Error('Erro ao contatar o servidor.');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.erro || 'Erro no servidor');
+                }
+
                 const data = await response.json();
-                
                 removeLoading();
                 addMessage(data.resposta, 'guia');
-
-                // Atualiza o histórico com a nova interação
+                
                 chatHistory.push({ "role": "user", "content": pergunta });
                 chatHistory.push({ "role": "assistant", "content": data.resposta });
 
                 if (data.mapa_link && data.local_nome) {
                     addMapLink(data.mapa_link, data.local_nome);
                 }
+
             } catch (error) {
                 removeLoading();
                 console.error("Erro:", error);
-                addMessage("Desculpe, estou com problemas de conexão no momento.", 'guia');
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.classList.add('message', 'guia');
+                errorDiv.style.backgroundColor = '#ffcccc';
+                errorDiv.style.color = '#333';
+                
+                errorDiv.innerHTML = `\n                    Ocorreu um erro: ${error.message} <br>\n                    <button onclick="retryLastMessage()" style="\n                        margin-top: 10px;\n                        padding: 5px 10px;\n                        background: #d32f2f;\n                        color: white;\n                        border: none;\n                        border-radius: 5px;\n                        cursor: pointer;">\n                        🔄 Tentar novamente\n                    </button>\n                `;
+                chatBox.appendChild(errorDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
             } finally {
                 userInput.disabled = false;
                 userInput.focus();
@@ -123,12 +136,38 @@
             }
         });
 
+        function retryLastMessage() {
+            if (!lastQuestion) return;
+            userInput.value = lastQuestion;
+            document.getElementById('send-button').click();
+        }
+
+        function typeWriter(element, text, speed = 10) {
+            let i = 0;
+            element.innerHTML = ''; // Limpa
+            const html = marked.parse(text);
+            element.innerHTML = html;
+            element.style.opacity = 0;
+            let op = 0.1;
+            let timer = setInterval(function () {
+                if (op >= 1){
+                    clearInterval(timer);
+                }
+                element.style.opacity = op;
+                element.style.filter = 'alpha(opacity=' + op * 100 + ")";
+                op += op * 0.1;
+            }, 10);
+        }
+
         function addMessage(text, sender) {
             const messageElement = document.createElement('div');
             messageElement.classList.add('message', sender);
-            let formattedText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
-            messageElement.innerHTML = formattedText;
+
+            if (sender === 'guia') {
+                typeWriter(messageElement, text);
+            } else {
+                messageElement.textContent = text; // Usuário sempre texto puro (segurança)
+            }
             chatBox.appendChild(messageElement);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -171,6 +210,7 @@
             }
             userInput.focus();
         });
-    </script>
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

@@ -52,6 +52,11 @@ def chat():
     if not pergunta:
         return jsonify({"erro": "Pergunta vazia"}), 400
 
+    if len(pergunta) > 500:
+        return jsonify({
+            "erro": "Sua pergunta é muito longa. Por favor, limite-se a 500 caracteres."
+        }), 400
+
     texto_input = normalize_text(pergunta)
     palavras_input = set(texto_input.split())
     is_saudacao_word = bool(palavras_input & SAUDACOES_WORDS)
@@ -96,20 +101,27 @@ def chat():
         else:
             mapa_link = create_search_map_link(local_nome)
 
-    resposta_ia = conversar_com_chat(pergunta, system_prompt, item_data_json, historico)
-    
-    threading.Thread(target=log_interaction, args=(pergunta, resposta_ia, local_nome)).start()
+    try:
+        resposta_ia = conversar_com_chat(pergunta, system_prompt, item_data_json, historico)
 
-    response_data = {
-        "resposta": resposta_ia,
-        "mapa_link": mapa_link,
-        "local_nome": local_nome
-    }
-    
-    if not data.get("historico"):
-        cache.set(cache_key, response_data, timeout=300)
-    
-    return jsonify(response_data)
+        if isinstance(resposta_ia, str) and "[Erro" in resposta_ia:
+            return jsonify({"erro": "Erro no processamento da IA"}), 500
+
+        threading.Thread(target=log_interaction, args=(pergunta, resposta_ia, local_nome)).start()
+
+        response_data = {
+            "resposta": resposta_ia,
+            "mapa_link": mapa_link,
+            "local_nome": local_nome
+        }
+
+        if not data.get("historico"):
+            cache.set(cache_key, response_data, timeout=300)
+
+        return jsonify(response_data)
+    except Exception as e:
+        print(f"Erro interno: {e}")
+        return jsonify({"erro": "Ocorreu um erro interno no servidor."}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

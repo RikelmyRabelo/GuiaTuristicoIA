@@ -1,3 +1,7 @@
+body {
+    min-height: 100dvh;
+}
+
 :root {
 
     --localizaxixa-bg: #9a9a9a;
