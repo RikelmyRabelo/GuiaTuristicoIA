@@ -94,10 +94,9 @@ def chat():
     if item_encontrado and not item_data_json:
         item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
         
-        # CORREÇÃO: Verifica se é uma categoria geral
         if item_encontrado.get("is_general"):
             local_nome = f"Geral: {item_encontrado.get('category')}"
-            mapa_link = None # ou link genérico se preferir
+            mapa_link = None
         else:
             local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
             endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")

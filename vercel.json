@@ -4,9 +4,12 @@
       "src": "app.py",
       "use": "@vercel/python",
       "config": {
+        "maxDuration": 15,
         "includeFiles": [
-          "data/prompt.json",  
-          "templates/index.html"
+          "data/**",
+          "templates/**",
+          "static/**",
+          "src/**"
         ]
       }
     }

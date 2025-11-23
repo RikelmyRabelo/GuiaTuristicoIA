@@ -4,3 +4,5 @@ python-dotenv
 rapidfuzz
 pytest
 supabase
+Flask-Limiter
+Flask-Caching
