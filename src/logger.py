@@ -2,6 +2,8 @@ import datetime
 from supabase import create_client, Client
 from src.config import SUPABASE_URL, SUPABASE_KEY
 
+
+
 supabase_client = None
 if SUPABASE_URL and SUPABASE_KEY:
     try:

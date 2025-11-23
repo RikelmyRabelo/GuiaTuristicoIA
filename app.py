@@ -3,6 +3,9 @@ import json
 import threading
 import urllib.parse
 from flask import Flask, request, jsonify, render_template
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_caching import Cache
 from src.constants import SAUDACOES_WORDS, SAUDACOES_PHRASES, IDENTITY_KEYWORDS
 from src.utils import load_prompt_data, normalize_text
 from src.search import build_search_index, find_item_smart
@@ -13,10 +16,20 @@ APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 PROMPT_FILE = os.path.join(APP_ROOT, "data", "prompt.json")
 
 app = Flask(__name__)
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
+cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache'})
+
 prompt_data = load_prompt_data(PROMPT_FILE)
 if prompt_data:
     system_prompt = "\n".join(prompt_data.get("system_prompt", []))
-    build_search_index(prompt_data)
+    build_search_index(prompt_data) 
 else:
     system_prompt = None
 
@@ -30,6 +43,7 @@ def index():
     return render_template("index.html")
 
 @app.route("/chat", methods=["POST"])
+@limiter.limit("10 per minute")
 def chat():
     data = request.json
     pergunta = data.get("pergunta", "")
@@ -52,7 +66,12 @@ def chat():
         resp = "Desenvolvido por: Guilherme Moreira, José Ribamar, Marina de Jesus e Rikelmy Rabelo."
         threading.Thread(target=log_interaction, args=(pergunta, resp, "Créditos")).start()
         return jsonify({"resposta": resp, "mapa_link": None, "local_nome": "Créditos"})
+
+    cache_key = normalize_text(pergunta)
     
+    if not data.get("historico") and cache.get(cache_key):
+        return jsonify(cache.get(cache_key))
+
     item_encontrado = None
     item_data_json = None
     local_nome = None
@@ -68,34 +87,29 @@ def chat():
         item_encontrado = find_item_smart(pergunta)
 
     if item_encontrado and not item_data_json:
-        if item_encontrado.get("is_general"):
-            local_nome = f"Geral: {item_encontrado['category']}"
-            itens_lista = json.dumps(item_encontrado["items"], ensure_ascii=False)
-            item_data_json = (
-                f"SITUAÇÃO: O usuário perguntou de forma genérica sobre '{item_encontrado['category']}'. "
-                f"RESPOSTA OBRIGATÓRIA: Explique que a cidade é cheia de povoados e pergunte se ele procura "
-                f"em algum povoado específico. Em seguida, liste estes exemplos variados: {itens_lista}"
-            )
-            mapa_link = None 
+        item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
+        local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
+        endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")
+        
+        if endereco and len(endereco) > 5 and "rural" not in endereco.lower():
+            mapa_link = create_search_map_link(f"{local_nome}, {endereco}")
         else:
-            item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
-            local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
-            endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco")
-            
-            if endereco and len(endereco) > 5 and "rural" not in endereco.lower():
-                mapa_link = create_search_map_link(f"{local_nome}, {endereco}")
-            else:
-                mapa_link = create_search_map_link(local_nome)
+            mapa_link = create_search_map_link(local_nome)
 
     resposta_ia = conversar_com_chat(pergunta, system_prompt, item_data_json, historico)
     
     threading.Thread(target=log_interaction, args=(pergunta, resposta_ia, local_nome)).start()
 
-    return jsonify({
+    response_data = {
         "resposta": resposta_ia,
         "mapa_link": mapa_link,
         "local_nome": local_nome
-    })
+    }
+    
+    if not data.get("historico"):
+        cache.set(cache_key, response_data, timeout=300)
+    
+    return jsonify(response_data)
 
 if __name__ == "__main__":
     app.run(debug=True)
