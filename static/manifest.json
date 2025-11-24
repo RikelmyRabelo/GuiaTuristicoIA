@@ -1,0 +1,21 @@
+
+{
+  "name": "Guia Digital - LocalizAxixá",
+  "short_name": "LocalizAxixá",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#008000",
+  "icons": [
+    {
+      "src": "/static/favicon.webp",
+      "sizes": "192x192",
+      "type": "image/webp"
+    },
+    {
+      "src": "/static/favicon.webp",
+      "sizes": "512x512",
+      "type": "image/webp"
+    }
+  ]
+}
