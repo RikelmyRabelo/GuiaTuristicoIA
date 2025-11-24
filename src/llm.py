@@ -7,17 +7,21 @@ def conversar_com_chat(pergunta: str, system_prompt: str, item_data_json: str = 
         yield "[Erro crítico: Prompt não carregado.]"
         return
 
+    # Headers corrigidos
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https.guialocalizaxixa.com",
+        "HTTP-Referer": "https://guialocalizaxixa.com", # Corrigido typo
         "X-Title": "Guia Digital - LocalizAxixá",
     }
     
     messages = [{"role": "system", "content": system_prompt}]
+    
+    # Adiciona histórico se existir (últimos 4)
     if historico:
         messages.extend(historico[-4:])
     
+    # Injeção de contexto (RAG)
     if item_data_json:
         messages.append({
             "role": "system", 
@@ -39,15 +43,14 @@ def conversar_com_chat(pergunta: str, system_prompt: str, item_data_json: str = 
         
         for line in response.iter_lines():
             if line:
-                decoded_line = line.decode('utf-8').replace('data: ', '')
-                if decoded_line != '[DONE]':
+                decoded_line = line.decode('utf-8').replace('data: ', '').strip()
+                if decoded_line and decoded_line != '[DONE]':
                     try:
                         json_line = json.loads(decoded_line)
-                        delta = json_line["choices"][0].get("delta", {})
-                        content = delta.get("content", "")
+                        content = json_line["choices"][0].get("delta", {}).get("content", "")
                         if content:
                             yield content
-                    except:
-                        pass
+                    except json.JSONDecodeError:
+                        continue
     except Exception as e:
-        yield f"[Erro IA: {e}]"
+        yield f"[Erro IA: {str(e)}]"
