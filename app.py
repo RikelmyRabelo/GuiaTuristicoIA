@@ -2,6 +2,8 @@ import os
 import json
 import threading
 import urllib.parse
+import time
+import sys
 from flask import Flask, request, jsonify, render_template, Response, stream_with_context
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -17,6 +19,7 @@ PROMPT_FILE = os.path.join(APP_ROOT, "data", "prompt.json")
 
 app = Flask(__name__)
 
+# Configuração do Redis para Rate Limit e Cache
 redis_url = os.getenv("REDIS_URL")
 
 if redis_url:
@@ -39,6 +42,7 @@ else:
     )
     cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache'})
 
+# Carregamento dos dados
 prompt_data = load_prompt_data(PROMPT_FILE)
 if prompt_data:
     system_prompt = "\n".join(prompt_data.get("system_prompt", []))
@@ -58,6 +62,9 @@ def index():
 @app.route("/chat", methods=["POST"])
 @limiter.limit("10 per minute")
 def chat():
+    # Marca o tempo de início da requisição
+    start_time = time.time()
+
     data = request.json
     pergunta = data.get("pergunta", "")
     historico = data.get("historico", [])
@@ -70,6 +77,7 @@ def chat():
             "erro": "Sua pergunta é muito longa. Por favor, limite-se a 500 caracteres."
         }), 400
 
+    # Normalização e verificação de saudações/identidade
     texto_input = normalize_text(pergunta)
     palavras_input = set(texto_input.split())
     is_saudacao_word = bool(palavras_input & SAUDACOES_WORDS)
@@ -85,6 +93,7 @@ def chat():
         threading.Thread(target=log_interaction, args=(pergunta, resp, "Créditos")).start()
         return jsonify({"resposta": resp, "mapa_link": None, "local_nome": "Créditos"})
 
+    # Lógica de busca de itens
     item_encontrado = None
     item_data_json = None
     local_nome = None
@@ -114,7 +123,9 @@ def chat():
             else:
                 mapa_link = create_search_map_link(local_nome)
 
+    # Função geradora para o Streaming
     def generate():
+        # 1. Envia metadados (JSON) na primeira linha
         metadata = {
             "mapa_link": mapa_link,
             "local_nome": local_nome
@@ -122,10 +133,24 @@ def chat():
         yield json.dumps(metadata) + "\n"
         
         full_response = ""
+        first_chunk = True
+        
+        # 2. Loop de streaming da IA
         for chunk in conversar_com_chat(pergunta, system_prompt, item_data_json, historico):
+            if first_chunk:
+                ttfb = time.time() - start_time
+                # Log de Latência (TTFB) com cor azul
+                print(f"\033[94m⏱️  [Latência] TTFB (Primeira palavra): {ttfb:.2f}s\033[0m", flush=True)
+                first_chunk = False
+            
             full_response += chunk
             yield chunk
         
+        # Log de Tempo Total com cor verde
+        total_time = time.time() - start_time
+        print(f"\033[92m⏱️  [Latência] Tempo Total: {total_time:.2f}s\033[0m", flush=True)
+        
+        # 3. Salva o log no Supabase em background
         threading.Thread(target=log_interaction, args=(pergunta, full_response, local_nome)).start()
 
     return Response(stream_with_context(generate()), mimetype='text/plain')
