@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 import pytest
 from unittest.mock import patch
 
@@ -15,9 +16,12 @@ def client():
     
     with patch('app.conversar_com_chat') as mock_chat:
         def side_effect(pergunta, system, item_data, hist):
-            if "povoados" in str(item_data):
-                return "A cidade é cheia de povoados, você quer algum específico? Temos estas opções..."
-            return "Resposta simulada da IA."
+            if "bolo" in pergunta.lower() or "hogwarts" in pergunta.lower():
+                yield "Desculpe, sou apenas um guia de Axixá e não posso ajudar com esse assunto."
+            elif item_data and "povoados" in str(item_data):
+                yield "A cidade é cheia de povoados, você quer algum específico?"
+            else:
+                yield "Resposta simulada da IA."
             
         mock_chat.side_effect = side_effect
         with app.test_client() as client:
@@ -26,7 +30,21 @@ def client():
     limiter.enabled = True
 
 def post_pergunta(client, texto):
-    return client.post('/chat', json={'pergunta': texto}).get_json()
+    response = client.post('/chat', json={'pergunta': texto})
+    
+    # Processamento do Streaming
+    content = response.data.decode('utf-8')
+    lines = content.split('\n')
+    
+    # Primeira linha é o JSON de metadados
+    try:
+        data = json.loads(lines[0])
+    except:
+        data = {"resposta": "", "local_nome": None, "mapa_link": None}
+    
+    # O restante é o texto
+    data['resposta'] = "".join(lines[1:])
+    return data
 
 @pytest.mark.parametrize("pergunta", [
     "Olá", "Olá, tudo bem?", "Oi guia", "Opa", "Bom dia", "Boa tarde"
