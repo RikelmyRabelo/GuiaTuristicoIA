@@ -4,10 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/static/favicon.webp" type="image/x-icon">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#008000">
     <title>Guia Digital - LocalizAxixá</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/static/style.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
 </head>
 
 <body class="light-mode">
@@ -28,8 +31,7 @@
             </div>
         </div>
 
-        <div id="suggestions-container">
-        </div>
+        <div id="suggestions-container"></div>
 
         <form id="input-area" class="input-area-form">
             <input type="text" id="user-input" class="input-field" placeholder="Pergunte algo..." autocomplete="off">
@@ -52,13 +54,41 @@
         const sendButton = document.getElementById('send-button');
         
         let chatHistory = [];
+        let loadingElement = null;
+        let lastQuestion = "";
+
+        const sugestoes = [
+            "🏰 Pontos turísticos",
+            "🍽️ Comidas típicas",
+            "🏫 Escolas na cidade",
+            "🛍️ Onde fazer compras?",
+            "📜 História de Axixá",
+            "🏨 Pousadas e hotéis"
+        ];
 
         userInput.addEventListener('input', () => {
             sendButton.disabled = userInput.value.trim() === "";
         });
 
-        let loadingElement = null;
-        let lastQuestion = "";
+        function renderizarSugestoes() {
+            const container = document.getElementById('suggestions-container');
+            container.innerHTML = ''; 
+
+            sugestoes.forEach(texto => {
+                const chip = document.createElement('button');
+                chip.className = 'suggestion-chip';
+                chip.textContent = texto;
+                
+                chip.onclick = () => {
+                    const textoLimpo = texto.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]./g, '').trim(); 
+                    userInput.value = textoLimpo; 
+                    document.getElementById('send-button').disabled = false;
+                    document.getElementById('send-button').click();
+                };
+                
+                container.appendChild(chip);
+            });
+        }
 
         function showLoading() {
             loadingElement = document.createElement('div');
@@ -81,12 +111,52 @@
             }
         }
 
+        function typeWriter(element, text, speed = 10) {
+            element.innerHTML = '';
+            
+            const rawHTML = marked.parse(text);
+            const fullHTML = DOMPurify.sanitize(rawHTML); 
+            
+            let i = 0;
+            let currentHTML = ''; 
+
+            function type() {
+                if (i >= fullHTML.length) return;
+
+                const char = fullHTML.charAt(i);
+
+                if (char === '<') {
+                    let tag = '';
+                    while (i < fullHTML.length && fullHTML.charAt(i) !== '>') {
+                        tag += fullHTML.charAt(i);
+                        i++;
+                    }
+                    tag += '>'; 
+                    currentHTML += tag;
+                } else {
+                    currentHTML += char;
+                }
+
+                element.innerHTML = currentHTML;
+                i++;
+                
+                chatBox.scrollTo({
+                    top: chatBox.scrollHeight,
+                    behavior: 'smooth'
+                });
+
+                setTimeout(type, speed);
+            }
+
+            type();
+        }
+
         inputArea.addEventListener('submit', async function (event) {
             event.preventDefault();
             const pergunta = userInput.value.trim();
             if (pergunta === "") return;
 
-            lastQuestion = pergunta;
+            lastQuestion = pergunta; 
             addMessage(pergunta, 'user');
             userInput.value = '';
             sendButton.disabled = true;
@@ -108,16 +178,49 @@
                     throw new Error(errorData.erro || 'Erro no servidor');
                 }
 
-                const data = await response.json();
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', 'guia');
+                chatBox.appendChild(messageDiv);
                 removeLoading();
-                addMessage(data.resposta, 'guia');
+
+                let isFirstChunk = true;
+                let fullText = "";
+                let mapaLink = null;
+                let localNome = null;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    let chunk = decoder.decode(value, { stream: true });
+                    
+                    if (isFirstChunk) {
+                        const parts = chunk.split('\n');
+                        if (parts.length > 0) {
+                            try {
+                                const metadata = JSON.parse(parts[0]);
+                                mapaLink = metadata.mapa_link;
+                                localNome = metadata.local_nome;
+                                chunk = parts.slice(1).join('\n');
+                            } catch (e) { console.error("Erro ao ler metadados", e); }
+                        }
+                        isFirstChunk = false;
+                    }
+
+                    fullText += chunk;
+                    messageDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullText));
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+
+                if (mapaLink && localNome) {
+                    addMapLink(mapaLink, localNome);
+                }
                 
                 chatHistory.push({ "role": "user", "content": pergunta });
-                chatHistory.push({ "role": "assistant", "content": data.resposta });
-
-                if (data.mapa_link && data.local_nome) {
-                    addMapLink(data.mapa_link, data.local_nome);
-                }
+                chatHistory.push({ "role": "assistant", "content": fullText });
 
             } catch (error) {
                 removeLoading();
@@ -128,7 +231,19 @@
                 errorDiv.style.backgroundColor = '#ffcccc';
                 errorDiv.style.color = '#333';
                 
-                errorDiv.innerHTML = `\n                    Ocorreu um erro: ${error.message} <br>\n                    <button onclick="retryLastMessage()" style="\n                        margin-top: 10px;\n                        padding: 5px 10px;\n                        background: #d32f2f;\n                        color: white;\n                        border: none;\n                        border-radius: 5px;\n                        cursor: pointer;">\n                        🔄 Tentar novamente\n                    </button>\n                `;
+                errorDiv.innerHTML = `
+                    Ocorreu um erro: ${error.message} <br>
+                    <button onclick="retryLastMessage()" style="
+                        margin-top: 10px;
+                        padding: 5px 10px;
+                        background: #d32f2f;
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;">
+                        🔄 Tentar novamente
+                    </button>
+                `;
                 chatBox.appendChild(errorDiv);
                 chatBox.scrollTop = chatBox.scrollHeight;
             } finally {
@@ -144,74 +259,6 @@
             document.getElementById('send-button').click();
         }
 
-        const sugestoes = [
-            "🏰 Pontos turísticos",
-            "🍽️ Comidas típicas",
-            "🏫 Escolas na cidade",
-            "🛍️ Onde fazer compras?",
-            "📜 História de Axixá",
-            "🏨 Pousadas e hotéis"
-        ];
-
-        function renderizarSugestoes() {
-            const container = document.getElementById('suggestions-container');
-            if (!container) return;
-            container.innerHTML = '';
-
-            sugestoes.forEach(texto => {
-                const chip = document.createElement('button');
-                chip.className = 'suggestion-chip';
-                chip.textContent = texto;
-                chip.onclick = () => {
-                    const textoLimpo = texto.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]./g, '').trim();
-                    userInput.value = textoLimpo;
-                    document.getElementById('send-button').disabled = false;
-                    document.getElementById('send-button').click();
-                };
-                container.appendChild(chip);
-            });
-        }
-
-        function typeWriter(element, text, speed = 10) {
-            element.innerHTML = '';
-            
-            const fullHTML = marked.parse(text);
-            
-            let i = 0;
-            let currentHTML = '';
-
-            function type() {
-                if (i >= fullHTML.length) return;
-
-                const char = fullHTML.charAt(i);
-
-                if (char === '<') {
-                    let tag = '';
-                    while (i < fullHTML.length && fullHTML.charAt(i) !== '>') {
-                        tag += fullHTML.charAt(i);
-                        i++;
-                    }
-                    tag += '>';
-                    currentHTML += tag;
-                } else {
-                    currentHTML += char;
-                }
-
-                element.innerHTML = currentHTML;
-
-                i++;
-
-                chatBox.scrollTo({
-                    top: chatBox.scrollHeight,
-                    behavior: 'smooth'
-                });
-
-                setTimeout(type, speed);
-            }
-
-            type();
-        }
-
         function addMessage(text, sender) {
             const messageElement = document.createElement('div');
             messageElement.classList.add('message', sender);
@@ -219,7 +266,7 @@
             if (sender === 'guia') {
                 typeWriter(messageElement, text);
             } else {
-                messageElement.textContent = text;
+                messageElement.textContent = text; 
             }
             chatBox.appendChild(messageElement);
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -263,8 +310,13 @@
             }
             renderizarSugestoes();
             userInput.focus();
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/static/sw.js')
+                .then(() => console.log('Service Worker registrado!'));
+            }
         });
-</script>
-<script defer src="/_vercel/insights/script.js"></script>
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

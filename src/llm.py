@@ -1,8 +1,11 @@
 import requests
+import json
 from src.config import OPENROUTER_API_KEY, OPENROUTER_API_URL, MODEL_NAME
 
 def conversar_com_chat(pergunta: str, system_prompt: str, item_data_json: str = None, historico: list = None):
-    if not system_prompt: return "[Erro crítico: Prompt não carregado.]"
+    if not system_prompt:
+        yield "[Erro crítico: Prompt não carregado.]"
+        return
 
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
@@ -12,7 +15,8 @@ def conversar_com_chat(pergunta: str, system_prompt: str, item_data_json: str = 
     }
     
     messages = [{"role": "system", "content": system_prompt}]
-    if historico: messages.extend(historico[-4:])
+    if historico:
+        messages.extend(historico[-4:])
     
     if item_data_json:
         messages.append({
@@ -27,9 +31,23 @@ def conversar_com_chat(pergunta: str, system_prompt: str, item_data_json: str = 
             "model": MODEL_NAME,
             "messages": messages,
             "temperature": 0.3,
-            "max_tokens": 1024
-        })
+            "max_tokens": 1024,
+            "stream": True
+        }, stream=True)
+        
         response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"].strip()
+        
+        for line in response.iter_lines():
+            if line:
+                decoded_line = line.decode('utf-8').replace('data: ', '')
+                if decoded_line != '[DONE]':
+                    try:
+                        json_line = json.loads(decoded_line)
+                        delta = json_line["choices"][0].get("delta", {})
+                        content = delta.get("content", "")
+                        if content:
+                            yield content
+                    except:
+                        pass
     except Exception as e:
-        return f"[Erro IA: {e}]"
+        yield f"[Erro IA: {e}]"

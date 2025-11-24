@@ -2,7 +2,7 @@ import os
 import json
 import threading
 import urllib.parse
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, Response, stream_with_context
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_caching import Cache
@@ -17,14 +17,27 @@ PROMPT_FILE = os.path.join(APP_ROOT, "data", "prompt.json")
 
 app = Flask(__name__)
 
-limiter = Limiter(
-    get_remote_address,
-    app=app,
-    default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://"
-)
+redis_url = os.getenv("REDIS_URL")
 
-cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache'})
+if redis_url:
+    limiter = Limiter(
+        get_remote_address,
+        app=app,
+        default_limits=["200 per day", "50 per hour"],
+        storage_uri=redis_url
+    )
+    cache = Cache(app, config={
+        'CACHE_TYPE': 'RedisCache',
+        'CACHE_REDIS_URL': redis_url
+    })
+else:
+    limiter = Limiter(
+        get_remote_address,
+        app=app,
+        default_limits=["200 per day", "50 per hour"],
+        storage_uri="memory://"
+    )
+    cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache'})
 
 prompt_data = load_prompt_data(PROMPT_FILE)
 if prompt_data:
@@ -72,11 +85,6 @@ def chat():
         threading.Thread(target=log_interaction, args=(pergunta, resp, "Créditos")).start()
         return jsonify({"resposta": resp, "mapa_link": None, "local_nome": "Créditos"})
 
-    cache_key = normalize_text(pergunta)
-    
-    if not data.get("historico") and cache.get(cache_key):
-        return jsonify(cache.get(cache_key))
-
     item_encontrado = None
     item_data_json = None
     local_nome = None
@@ -106,27 +114,21 @@ def chat():
             else:
                 mapa_link = create_search_map_link(local_nome)
 
-    try:
-        resposta_ia = conversar_com_chat(pergunta, system_prompt, item_data_json, historico)
-
-        if isinstance(resposta_ia, str) and "[Erro" in resposta_ia:
-            return jsonify({"erro": "Erro no processamento da IA"}), 500
-
-        threading.Thread(target=log_interaction, args=(pergunta, resposta_ia, local_nome)).start()
-
-        response_data = {
-            "resposta": resposta_ia,
+    def generate():
+        metadata = {
             "mapa_link": mapa_link,
             "local_nome": local_nome
         }
+        yield json.dumps(metadata) + "\n"
+        
+        full_response = ""
+        for chunk in conversar_com_chat(pergunta, system_prompt, item_data_json, historico):
+            full_response += chunk
+            yield chunk
+        
+        threading.Thread(target=log_interaction, args=(pergunta, full_response, local_nome)).start()
 
-        if not data.get("historico"):
-            cache.set(cache_key, response_data, timeout=300)
-
-        return jsonify(response_data)
-    except Exception as e:
-        print(f"Erro interno: {e}")
-        return jsonify({"erro": "Ocorreu um erro interno no servidor."}), 500
+    return Response(stream_with_context(generate()), mimetype='text/plain')
 
 if __name__ == "__main__":
     app.run(debug=True)

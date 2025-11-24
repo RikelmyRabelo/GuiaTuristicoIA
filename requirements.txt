@@ -6,3 +6,4 @@ pytest
 supabase
 Flask-Limiter
 Flask-Caching
+redis
