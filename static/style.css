@@ -322,3 +322,61 @@ h1 i {
 .spacer-mini {
     height: 8px;
 }
+
+#suggestions-container {
+    display: flex;
+    gap: 10px;
+    padding: 10px 15px;
+    overflow-x: auto;
+    white-space: nowrap;
+    margin-bottom: 5px;
+    scrollbar-width: none;
+}
+
+#suggestions-container::-webkit-scrollbar {
+    display: none;
+}
+.suggestion-chip {
+    background-color: var(--bg-chat);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.suggestion-chip:hover {
+    background-color: var(--button-bg);
+    color: white;
+    border-color: var(--button-bg);
+    transform: translateY(-2px);
+}
+
+.message ol, .message ul {
+    margin: 5px 0;
+    padding-left: 25px;
+}
+
+.message li {
+    margin-bottom: 8px;
+}
+
+.message p {
+    margin: 0 0 8px 0;
+}
+
+.message strong {
+    font-weight: 600;
+    color: inherit;
+}
+
+.message em {
+    opacity: 0.9;
+}
+#suggestions-container {
+    padding: 10px 5px;
+    margin-top: -10px;
+}

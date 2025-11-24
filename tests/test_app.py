@@ -5,14 +5,13 @@ from unittest.mock import patch
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Importação do limiter
 from app import app, limiter
 
 @pytest.fixture
 def client():
     app.config['TESTING'] = True
     app.config['RATELIMIT_ENABLED'] = False
-    limiter.enabled = False # Desativa limiter
+    limiter.enabled = False
     
     with patch('app.conversar_com_chat') as mock_chat:
         def side_effect(pergunta, system, item_data, hist):
@@ -24,7 +23,7 @@ def client():
         with app.test_client() as client:
             yield client
             
-    limiter.enabled = True # Reativa
+    limiter.enabled = True
 
 def post_pergunta(client, texto):
     return client.post('/chat', json={'pergunta': texto}).get_json()

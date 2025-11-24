@@ -28,6 +28,9 @@
             </div>
         </div>
 
+        <div id="suggestions-container">
+        </div>
+
         <form id="input-area" class="input-area-form">
             <input type="text" id="user-input" class="input-field" placeholder="Pergunte algo..." autocomplete="off">
             <button type="submit" id="send-button" class="btn-send" disabled>➤</button>
@@ -48,7 +51,6 @@
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         
-        // Variável para armazenar o histórico da conversa atual
         let chatHistory = [];
 
         userInput.addEventListener('input', () => {
@@ -84,7 +86,7 @@
             const pergunta = userInput.value.trim();
             if (pergunta === "") return;
 
-            lastQuestion = pergunta; // Salva para reuso
+            lastQuestion = pergunta;
             addMessage(pergunta, 'user');
             userInput.value = '';
             sendButton.disabled = true;
@@ -142,21 +144,72 @@
             document.getElementById('send-button').click();
         }
 
+        const sugestoes = [
+            "🏰 Pontos turísticos",
+            "🍽️ Comidas típicas",
+            "🏫 Escolas na cidade",
+            "🛍️ Onde fazer compras?",
+            "📜 História de Axixá",
+            "🏨 Pousadas e hotéis"
+        ];
+
+        function renderizarSugestoes() {
+            const container = document.getElementById('suggestions-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            sugestoes.forEach(texto => {
+                const chip = document.createElement('button');
+                chip.className = 'suggestion-chip';
+                chip.textContent = texto;
+                chip.onclick = () => {
+                    const textoLimpo = texto.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]./g, '').trim();
+                    userInput.value = textoLimpo;
+                    document.getElementById('send-button').disabled = false;
+                    document.getElementById('send-button').click();
+                };
+                container.appendChild(chip);
+            });
+        }
+
         function typeWriter(element, text, speed = 10) {
+            element.innerHTML = '';
+            
+            const fullHTML = marked.parse(text);
+            
             let i = 0;
-            element.innerHTML = ''; // Limpa
-            const html = marked.parse(text);
-            element.innerHTML = html;
-            element.style.opacity = 0;
-            let op = 0.1;
-            let timer = setInterval(function () {
-                if (op >= 1){
-                    clearInterval(timer);
+            let currentHTML = '';
+
+            function type() {
+                if (i >= fullHTML.length) return;
+
+                const char = fullHTML.charAt(i);
+
+                if (char === '<') {
+                    let tag = '';
+                    while (i < fullHTML.length && fullHTML.charAt(i) !== '>') {
+                        tag += fullHTML.charAt(i);
+                        i++;
+                    }
+                    tag += '>';
+                    currentHTML += tag;
+                } else {
+                    currentHTML += char;
                 }
-                element.style.opacity = op;
-                element.style.filter = 'alpha(opacity=' + op * 100 + ")";
-                op += op * 0.1;
-            }, 10);
+
+                element.innerHTML = currentHTML;
+
+                i++;
+
+                chatBox.scrollTo({
+                    top: chatBox.scrollHeight,
+                    behavior: 'smooth'
+                });
+
+                setTimeout(type, speed);
+            }
+
+            type();
         }
 
         function addMessage(text, sender) {
@@ -166,7 +219,7 @@
             if (sender === 'guia') {
                 typeWriter(messageElement, text);
             } else {
-                messageElement.textContent = text; // Usuário sempre texto puro (segurança)
+                messageElement.textContent = text;
             }
             chatBox.appendChild(messageElement);
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -208,6 +261,7 @@
             } else {
                 document.getElementById('theme-icon').className = 'fas fa-moon';
             }
+            renderizarSugestoes();
             userInput.focus();
         });
 </script>
