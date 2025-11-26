@@ -32,18 +32,19 @@ def client():
 def post_pergunta(client, texto):
     response = client.post('/chat', json={'pergunta': texto})
     
-    # Processamento do Streaming
     content = response.data.decode('utf-8')
     lines = content.split('\n')
     
-    # Primeira linha é o JSON de metadados
     try:
         data = json.loads(lines[0])
     except:
         data = {"resposta": "", "local_nome": None, "mapa_link": None}
-    
-    # O restante é o texto
-    data['resposta'] = "".join(lines[1:])
+
+    # Se for uma streaming response, a resposta estará nas linhas seguintes;
+    # caso contrário, mantenha o campo 'resposta' presente no JSON retornado.
+    # Somente sobrescrever resposta se houver verdadeiros chunks (linhas não vazias)
+    if any(l.strip() for l in lines[1:]):
+        data['resposta'] = "".join(lines[1:])
     return data
 
 @pytest.mark.parametrize("pergunta", [

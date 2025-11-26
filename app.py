@@ -8,7 +8,6 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_caching import Cache
 
-# Imports do projeto
 from src.constants import SAUDACOES_WORDS, SAUDACOES_PHRASES, IDENTITY_KEYWORDS
 from src.utils import load_prompt_data, normalize_text
 from src.search import build_search_index, find_item_smart
@@ -20,7 +19,6 @@ PROMPT_FILE = os.path.join(APP_ROOT, "data", "prompt.json")
 
 app = Flask(__name__)
 
-# --- Refatoração 1: Configuração Simplificada ---
 redis_url = os.getenv("REDIS_URL")
 storage_uri = redis_url if redis_url else "memory://"
 cache_config = {
@@ -31,7 +29,6 @@ cache_config = {
 limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "50 per hour"], storage_uri=storage_uri)
 cache = Cache(app, config=cache_config)
 
-# Carregamento dos dados
 prompt_data = load_prompt_data(PROMPT_FILE)
 system_prompt = "\n".join(prompt_data.get("system_prompt", [])) if prompt_data else None
 if prompt_data:
@@ -41,9 +38,7 @@ def create_search_map_link(query: str) -> str:
     full_query = quote(f"{query}, Axixá, Maranhão")
     return f"https://www.google.com/maps/search/?api=1&query={full_query}"
 
-# --- Refatoração 2: Função auxiliar para evitar repetição de código ---
 def responder_rapido(pergunta, resposta, tipo_log):
-    """Loga em background e retorna a resposta JSON formatada."""
     threading.Thread(target=log_interaction, args=(pergunta, resposta, tipo_log)).start()
     return jsonify({"resposta": resposta, "mapa_link": None, "local_nome": tipo_log})
 
@@ -64,10 +59,8 @@ def chat():
     if len(pergunta) > 500:
         return jsonify({"erro": "Sua pergunta é muito longa (max 500 caracteres)."}), 400
 
-    # Normalização
     texto_input = normalize_text(pergunta)
     
-    # Verificações Rápidas (Saudação / Identidade)
     palavras_input = set(texto_input.split())
     if (palavras_input & SAUDACOES_WORDS) or any(p in texto_input for p in SAUDACOES_PHRASES):
         return responder_rapido(pergunta, "Olá! Sou o Guia Digital de Axixá. Posso ajudar com escolas, lojas, turismo e história da cidade.", "Saudação")
@@ -75,7 +68,6 @@ def chat():
     if any(k in texto_input for k in IDENTITY_KEYWORDS):
         return responder_rapido(pergunta, "Desenvolvido por: Guilherme Moreira, José Ribamar, Marina de Jesus e Rikelmy Rabelo.", "Créditos")
 
-    # Lógica de Busca
     item_data_json = None
     local_nome = None
     mapa_link = None
@@ -90,24 +82,27 @@ def chat():
     else:
         item_encontrado = find_item_smart(pergunta)
 
-    # Processamento do Item Encontrado
     if item_encontrado and not item_data_json:
-        item_data_json = json.dumps(item_encontrado, ensure_ascii=False)
+        item_encontrado_copy = dict(item_encontrado)
+        if item_encontrado_copy.get("is_general"):
+            cat = item_encontrado_copy.get("category", "").lower()
+            if cat in ("escolas", "lojas", "igrejas"):
+                item_encontrado_copy["description"] = (
+                    str(item_encontrado_copy.get("description", "")) + " povoados"
+                )
+        item_data_json = json.dumps(item_encontrado_copy, ensure_ascii=False)
         
         if item_encontrado.get("is_general"):
             local_nome = f"Geral: {item_encontrado.get('category')}"
         else:
             local_nome = item_encontrado.get("nome") or item_encontrado.get("orgao")
             endereco = item_encontrado.get("localizacao") or item_encontrado.get("endereco") or ""
-            # Gera link apenas se tiver endereço válido e não for zona rural genérica
             if len(endereco) > 5 and "rural" not in endereco.lower():
                 mapa_link = create_search_map_link(f"{local_nome}, {endereco}")
             else:
                 mapa_link = create_search_map_link(local_nome)
 
-    # Streaming Response
     def generate():
-        # Envia metadados primeiro
         yield json.dumps({"mapa_link": mapa_link, "local_nome": local_nome}) + "\n"
         
         full_response = ""
@@ -115,7 +110,6 @@ def chat():
             full_response += chunk
             yield chunk
         
-        # Log após conclusão
         threading.Thread(target=log_interaction, args=(pergunta, full_response, local_nome)).start()
         print(f"\033[92m[Latência] Total: {time.time() - start_time:.2f}s\033[0m")
 

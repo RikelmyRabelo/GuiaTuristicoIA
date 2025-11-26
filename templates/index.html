@@ -179,6 +179,27 @@
                     throw new Error(errorData.erro || 'Erro no servidor');
                 }
 
+                const contentType = response.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    const data = await response.json();
+                    removeLoading();
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('message', 'guia');
+                    const resposta = data.resposta || '';
+
+                    typeWriter(messageDiv, resposta);
+                    chatBox.appendChild(messageDiv);
+                    if (data.mapa_link && data.local_nome) {
+                        addMapLink(data.mapa_link, data.local_nome);
+                    }
+                    chatHistory.push({ "role": "user", "content": pergunta });
+                    chatHistory.push({ "role": "assistant", "content": resposta });
+                    userInput.disabled = false;
+                    userInput.focus();
+                    sendButton.disabled = userInput.value.trim() === "";
+                    return;
+                }
+
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 

@@ -7,21 +7,18 @@ def conversar_com_chat(pergunta: str, system_prompt: str, item_data_json: str = 
         yield "[Erro crítico: Prompt não carregado.]"
         return
 
-    # Headers corrigidos
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://guialocalizaxixa.com", # Corrigido typo
+        "HTTP-Referer": "https://guialocalizaxixa.com",
         "X-Title": "Guia Digital - LocalizAxixá",
     }
     
     messages = [{"role": "system", "content": system_prompt}]
     
-    # Adiciona histórico se existir (últimos 4)
     if historico:
         messages.extend(historico[-4:])
     
-    # Injeção de contexto (RAG)
     if item_data_json:
         messages.append({
             "role": "system", 

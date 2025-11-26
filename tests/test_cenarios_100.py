@@ -17,8 +17,6 @@ def client():
     with patch('app.conversar_com_chat') as mock_chat:
         def side_effect(pergunta, system, item_data, hist):
             pergunta_lower = pergunta.lower()
-            # Simula recusa para assuntos off-topic
-            # ATUALIZADO: Incluído "2 + 2" e "frança" para passar nos novos testes
             termos_proibidos = [
                 "bolo", "matemática", "política", "programação", 
                 "brasil", "hogwarts", "xyz123", "2 + 2", "frança"
@@ -43,7 +41,6 @@ def post_pergunta(client, texto):
     if response.status_code == 429:
         pytest.fail("Erro 429: Rate Limit ainda está ativo! O teste foi bloqueado.")
     
-    # Parser de Streaming
     content = response.data.decode('utf-8')
     lines = content.split('\n')
     

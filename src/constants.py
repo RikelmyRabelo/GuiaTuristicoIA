@@ -21,7 +21,7 @@ STOP_WORDS = {
     'nos', 'nas', 'por', 'para', 'com', 'sem', 'sob', 'sobre', 'as', 'os',
     'me', 'fale', 'diga', 'onde', 'fica', 'localiza', 'localizacao', 'qual', 
     'quais', 'sao', 'sou', 'gostaria', 'queria', 'saber', 'informacoes', 'info', 
-    'axixa', 'cidade', 'municipio', 'ola', 'oi', 'como', 'faco', 'pra', 'chegar', 
+    'axixa', 'cidade', 'municipio', 'como', 'faco', 'pra', 'chegar', 
     'quero', 'tem', 'tinha', 'existe', 'existem', 'ha', 'que', 'alguma', 'algum', 
     'uns', 'umas', 'bairro', 'rua', 'av', 'avenida', 'povoado',
     'tomar', 'fazer', 'encontrar', 'posso', 'pode', 'endereco', 
